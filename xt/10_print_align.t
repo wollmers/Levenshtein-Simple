@@ -7,15 +7,19 @@ use utf8;
 
 use lib qw(../lib/);
 
+binmode(STDOUT,":encoding(UTF-8)");
+binmode(STDERR,":encoding(UTF-8)");
+
 #use Test::More;
 #use Test::Deep;
 
 use Data::Dumper;
 
+use LCS;
 use Levenshtein::Simple;
 #my $object = Levenshtein::Simple->new();
 
-my $examples = [
+my $examples1 = [
   ['ttatc__cg',
    '__agcaact'],
   ['abcabba_',
@@ -66,55 +70,116 @@ my $examples = [
     '_bcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVYZ'],
 ];
 
-if (1) {
-#for my $example (@$examples) {
-for my $example ($examples->[0]) {
-  my $a = $example->[0];
-  my $b = $example->[1];
-  my $x = $a;
-  $x =~ s/_//g;
-  my $y = $b;
-  $y =~ s/_//g;
+my $examples2 = [
+  [ 'gehe oder nachfolge; und gerade hiedurch iſt die Möglichkeit geboten, den',
+    'gehe oder nachſolge; und gerade hiedur_h iſt die Wöglicht_it geboten, den'],
+  [ 'Indem ich nun auch für dieſe zweite Auflage eine wohlwollende Auf⸗',
+    'Inden ich nun auch für wuſlge ene wohlvolende Auſ⸗'],
+  [ ' wohlwollende Auf⸗',
+    ' wohlvo_lende Auſ⸗'],
+];
 
-  #my @X = map { $_ =~ s/_//; $_ } split(//,$example->[0]);
-  #my @Y = map { $_ =~ s/_//; $_ } split(//,$example->[1]);
+my $examples3 = [
+  ['isnt',
+   'hint'],
+  ['sue',
+   'use'],
+  ['gold',
+   'glow'],
+  ['eonnnnnicaio',
+   'communicato'],
+  ['Choerephon',
+   'Chrerrplzon'],
+  ['Algorithm',
+   'Altruistic'],
+  ['ABCABBA',
+   'CBABAC'],
+];
+
+if (1) {
+#for my $example (@$examples1) {
+for my $example ($examples1->[0]) {
+#for my $example (@$examples2) {
+#for my $example (@$examples3) {
+#for my $example ($examples3->[5]) {
+  my $s1 = $example->[0];
+  my $s2 = $example->[1];
+  my $x = $s1;
+  $x =~ s/_//g;
+  my $y = $s2;
+  $y =~ s/_//g;
 
   my @X = split(//,$x);
   my @Y = split(//,$y);
 
-  print $a, "\n", $b, "\n";
-  print join('',@X),' ',join('',@Y),"\n";
-
   my $object = Levenshtein::Simple->new();
 
-  my $c = $object->_matrix(\@X,\@Y);
+  #my $c = $object->_matrix(\@X,\@Y);
+
+  #my $L = $object->_matrix_LCS(\@X,\@Y);
+
+  #my $ranks = $object->_ranks(\@X,\@Y);
+    #print '$ranks: ',Dumper($ranks);
+=pod
+if (0) {
+  for my $rank (sort {$b <=> $a} keys %{$ranks}) {
+      for my $x (sort {$b <=> $a} keys %{$ranks->{$rank}}) {
+          for my $y (sort {$b <=> $a} keys %{$ranks->{$rank}{$x}}) {
+			print 'rank:',$rank,' x: ',$x,' y: ',$y,"\n";
+      	  }
+      }
+  }
+}
+
+  if (0) {
+    print '$c: ',Dumper($c);
+    print '$L: ',Dumper($L);
+    #exit;
+  }
+
+  if (0) {
+  	$object->_print_matrix(\@X, \@Y, $c);
+  	$object->_print_matrix(\@X, \@Y, $L);
+  }
+=cut
+  if (1) {
+  	my $R = $object->all_ses(\@X,\@Y);
+
+  	my $paths = scalar @$R;
+
+    print "\n";
+  	print 'all possible SES alignments: ', $paths,"\n";
 
 
-  #print '$c: ',Dumper($c);
+    my $alignment_count = 0;
+    for my $alignment (@$R) {
+      $alignment_count++;
+      print "\n";
+      print '*** ', $alignment_count, '. SES Alignment ***', "\n";
+      #print $a, ' > ', $b, "\n";
+      $object->_print_alignment_path(\@X, \@Y, $alignment);
+      $object->_print_alignment(\@X, \@Y, $alignment);
+    }
 
-  $object->_print_matrix(\@X, \@Y, $c);
+  }
 
-  #exit;
+  #print "\n",'ses ', $a, ' > ', $b, "\n";
+  #my $ses = $object->ses(\@X,\@Y);
+  my $ses = $object->align(\@X,\@Y);
+  my $LLCS = LCS->LLCS(\@X, \@Y);
+  my $distance = $object->distance(\@X,\@Y);
 
-  my $R = $object->all_ses(\@X,\@Y);
+  #print "\n";
+  #print '*** Default SES Alignment ***', "\n";
 
-  my $paths = scalar @$R;
-
-  print '$paths: ', $paths,"\n"; # $paths: 19
-
-  #print '$R: ',Dumper($R);
-
-  #exit;
-
-  #for my $alignment (@$R) {
-  #    print "\n";
-  #    #print $a, ' > ', $b, "\n";
-  #    $object->_print_alignment(\@X, \@Y, $alignment);
-  #}
-
-  print "\n",'ses ', $a, ' > ', $b, "\n";
-  my $ses = $object->ses(\@X,\@Y);
+  #$object->_print_alignment_path(\@X, \@Y, $ses);
+  my $OK = 'XX';
+  if (($distance+$LLCS) == scalar @$ses) { $OK = 'OK'; }
+  print $OK,  "\n";
   $object->_print_alignment(\@X, \@Y, $ses);
+
+
+  #print 'LLCS: ', $LLCS, "\n";
 }
 }
 
