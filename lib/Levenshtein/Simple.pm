@@ -11,7 +11,20 @@ binmode(STDERR,":encoding(UTF-8)");
 
 sub new {
     my $class = shift;
-    bless @_ ? @_ > 1 ? {@_} : {%{$_[0]}} : {}, ref $class || $class;
+    my $self = bless @_ ? @_ > 1 ? {@_} : {%{$_[0]}} : {}, ref $class || $class;
+
+    unless ( $self->{'gapchar'} ) { $self->{'gapchar'} = '_'; }
+
+    unless ( defined $self->{'editchars'} && ( length($self->{'editchars'}) == 4) ) {
+        $self->{'editchars'} = '=~-+';
+    }
+    my @editchars  = split( //, $self->{'editchars'} );
+    $self->{'eq'}  = $editchars[0];
+    $self->{'sub'} = $editchars[1];
+    $self->{'del'} = $editchars[2];
+    $self->{'ins'} = $editchars[3];
+
+    return $self;
 }
 
 sub distance {
@@ -37,6 +50,7 @@ sub distance {
     my $n = ($bmax - $bmin) + 1;
 
     # shortcut if length of one or both sides is zero
+    # uncoverable condition false
     if ( !$m || !$n ) { return ( $m ? $m : $n ) }
 
     my @c = ();
@@ -46,6 +60,7 @@ sub distance {
 
     my ($i, $j);
 
+    # NOTE: comparison in @c uses index-origin 1
     for $i ( 1 .. $m ) {
 
         # init first column of matrix
@@ -72,7 +87,7 @@ sub distance {
     return ( $c[$m][$n] );
 }
 
-sub _matrix {
+sub matrix {
     my ($self, $X, $Y) = @_;
 
     my $m = scalar @{$X};
@@ -113,9 +128,7 @@ sub ses {
 
     if ( !$m && !$n ) { return [] }
 
-    my $c = $self->_matrix( $X, $Y );
-
-    ##$self->_print_matrix($X, $Y, $c);
+    my $c = $self->matrix( $X, $Y );
 
     my $ses = [];
 
@@ -128,38 +141,31 @@ sub ses {
         	$c->[$i-1][$j  ],
         	$c->[$i  ][$j-1]
         );
-        ##print STDERR '$i: ', $i, '$j: ', $j, "\n";
-        ##print STDERR '$c->[$i-1][$j-1]: ', $c->[$i-1][$j-1], '$c->[$i-1][$j  ]: ', $c->[$i-1][$j  ], '$c->[$i  ][$j-1]: ', $c->[$i  ][$j-1], "\n";
-        ##print STDERR '$min: ', $min, "\n" unless $min;
-        # equal = match
+
         if ( $c->[$i-1][$j-1] == $min && (($c->[$i-1][$j-1] + 0 ) == $c->[$i][$j]) ) {
-            unshift @$ses, [$i-1, $j-1, '='];
+            unshift @$ses, [$i-1, $j-1, $self->{'eq'}];
             $i--; $j--;
         }
-        # deletion
         elsif ($i > 0 && ($c->[$i-1][$j] + 1 == $c->[$i][$j]) ) {
-            unshift @$ses, [$i-1, $j-1, '-'];
+            unshift @$ses, [$i-1, -1, $self->{'del'}];
             $i--;
         }
-        # insertion
         elsif ($j > 0 && ($c->[$i][$j-1] + 1 == $c->[$i][$j]) ) {
-            unshift @$ses, [$i-1, $j-1, '+'];
+            unshift @$ses, [-1, $j-1, $self->{'ins'}];
             $j--;
         }
-
-        # substitution
         elsif ($i > 0 && $j > 0 && ($c->[$i-1][$j-1] + 1  == $c->[$i][$j]) ) {
-            unshift @$ses, [$i-1, $j-1, '~'];
+            unshift @$ses, [$i-1, $j-1, $self->{'sub'}];
             $i--; $j--;
         }
     }
     while ($i > 0) {
-            unshift @$ses, [$i-1, $j, '-'];
-            $i--;
+        unshift @$ses, [$i-1, -1, $self->{'del'}];
+        $i--;
     }
     while ($j > 0) {
-            unshift @$ses, [$i, $j-1, '+'];
-            $j--;
+        unshift @$ses, [-1, $j-1, $self->{'ins'}];
+        $j--;
     }
     return $ses;
 }
@@ -172,9 +178,7 @@ sub all_ses {
 
     if ( !$m && !$n ) { return [[]] }
 
-    my $c = $self->_matrix($X, $Y);
-
-    ##$self->_print_matrix($X, $Y, $c);
+    my $c = $self->matrix($X, $Y);
 
     my $paths  = [[]];
     my $result = [];
@@ -191,148 +195,246 @@ sub all_ses {
             if (scalar @$path) {
                 $i = $path->[0][0] + 1;
                 $j = $path->[0][1] + 1;
-                if    ($path->[0][2] eq '-') { $i--; }
-                elsif ($path->[0][2] eq '+') { $j--; }
+                if    ($path->[0][2] eq $self->{'del'}) { $i--; }
+                elsif ($path->[0][2] eq $self->{'ins'}) { $j--; }
                 else  { $i--; $j--; }
             }
-            #print STDERR ' $i: ', $i, ' $j: ', $j, "\n";
+
             # deletion
             if ($i > 0 && $c->[$i-1][$j] + 1 == $c->[$i][$j]) {
                 if ($i == 1 && $j <= 1) {
-                    push @$result, [ [0, 0, '-'], @$path ];
+                    push @$result, [ [0, 0, $self->{'del'}], @$path ];
                 }
                 else {
-                    #print STDERR join(' ', ($i-1, $j-1, '-')), "\n";
-                    push @temp, [ [$i-1, $j-1, '-'], @$path ];
+                    push @temp, [ [$i-1, $j-1, $self->{'del'}], @$path ];
                 }
             }
             # insertion
             if ($j > 0 && $c->[$i][$j-1] + 1 == $c->[$i][$j]) {
                 if ($i <= 1 && $j == 1) {
-                    push @$result, [ [0, 0, '+'], @$path ];
+                    push @$result, [ [0, 0, $self->{'ins'}], @$path ];
                 }
                 else {
-                    #print STDERR join(' ', ($i-1, $j-1, '+')), "\n";
-                    push @temp, [[$i-1, $j-1, '+'], @$path];
+                    push @temp, [[$i-1, $j-1, $self->{'ins'}], @$path];
                 }
             }
             # equal = match
             if ($i > 0 && $j > 0 && $c->[$i-1][$j-1] == $c->[$i][$j]) {
                 if ($i == 1 && $j == 1) {
-                    push @$result, [ [0, 0, '='], @$path ];
+                    push @$result, [ [0, 0, $self->{'eq'}], @$path ];
                 }
                 else {
-                    #print STDERR join(' ', ($i-1, $j-1, '=')), "\n";
-                    push @temp, [ [$i-1, $j-1, '='], @$path ];
+                    push @temp, [ [$i-1, $j-1, $self->{'eq'}], @$path ];
                 }
             }
             # substitution
             if ($i > 0 && $j > 0 && $c->[$i-1][$j-1] + 1  == $c->[$i][$j]) {
                 if ($i == 1 && $j == 1) {
-                    push @$result, [ [0, 0, '~'], @$path ];
+                    push @$result, [ [0, 0, $self->{'sub'}], @$path ];
                 }
                 else {
-                    #print STDERR join(' ', ($i-1, $j-1, '~')), "\n";
-                    push @temp, [[$i-1, $j-1, '~'], @$path];
+                    push @temp, [[$i-1, $j-1, $self->{'sub'}], @$path];
                 }
             }
         }
         @$paths = @temp;
     }
-    return $result;
+
+    return [ map { $self->ses2none($_) } @$result ];
 }
 
-sub _print_matrix {
+sub format_matrix {
+    my ($self, $X, $Y ) = @_;
+
+    return $self->_format_matrix( $X, $Y, $self->matrix( $X, $Y ) );
+}
+
+sub _format_matrix {
     my ($self, $X, $Y, $c) = @_;
 
     my $m = scalar @$X;
     my $n = scalar @$Y;
 
-    print "\n", 'Levenshtein matrix of "',join('',@$X),'" versus "',join('',@$Y),'"',"\n";
-    print "\n";
-    print '  ',sprintf('%3s',' ');
-    for my $j (0..$n-1) { print sprintf('%3s',$Y->[$j]); }
-    print "\n",'  ';
-    for my $j (0..$n) { print sprintf('%3s',$c->[0][$j]); }
-    print "\n";
-    for my $i (1..$m) {
-        print ' ', sprintf('%1s',$X->[$i-1]);
-        for my $j (0..$n) { print sprintf('%3s', $c->[$i][$j]); }
-        print "\n";
+    my $max_length = ($m >= $n) ? $m : $n;
+    my $l = length($max_length) + 1; # length in chars plus space
+
+    my $out = '';
+
+    $out .= "\n". 'Levenshtein matrix of "'
+        . join('',@$X).'" versus "' . join('',@$Y) . '"' . "\n";
+    $out .=  "\n";
+    $out .=  sprintf("%${l}s",' ') . sprintf("%${l}s",' ');
+    for my $j (0..$n-1) {
+        $out .=  sprintf("%${l}s",$Y->[$j]);
     }
+    $out .=  "\n" . sprintf("%${l}s",' ');
+    for my $j (0..$n) {
+        $out .=  sprintf("%${l}s",$c->[0][$j]);
+    }
+    $out .=  "\n";
+    for my $i (1..$m) {
+        $out .=  sprintf("%${l}s",$X->[$i-1]);
+        for my $j (0..$n) {
+            $out .=  sprintf("%${l}s", $c->[$i][$j]);
+        }
+        $out .= "\n";
+    }
+    return $out;
 }
 
-sub _print_alignment_path {
+sub format_alignment_path {
+    my ($self, $X, $Y ) = @_;
+
+    return $self->_format_alignment_path( $X, $Y, $self->ses( $X, $Y ) );
+}
+
+sub _format_alignment_path {
     my ($self, $X, $Y, $hunks) = @_;
 
-    my $line = 'Path: [ ';
+    my $line = '[ ';
     for my $hunk (@$hunks) {
         $line .= '[' . join(',', @$hunk) . '],';
     }
-    print $line, ' ]', "\n";
+    $line .=  ' ]';
+    return $line;
 }
 
-sub _print_alignment {
-    my ($self, $X, $Y, $hunks) = @_;
+sub format_alignment {
+    my ($self, $X, $Y, $gap) = @_;
+
+    return $self->_format_alignment( $X, $Y, $self->ses( $X, $Y ), $gap );
+}
+
+sub _format_alignment {
+    my ($self, $X, $Y, $hunks, $gap) = @_;
+
+    $gap = (defined $gap) ? $gap : $self->{'gapchar'};
 
     my $line1 = '';
     my $line2 = '';
     my $line3 = '';
+
+    for my $hunk (@$hunks) {
+        $line2 .= $hunk->[2];
+        if ($hunk->[2] eq $self->{'del'}) {
+            $line1 .= $X->[$hunk->[0]];
+            $line3 .= $gap;
+        }
+        elsif ($hunk->[2] eq $self->{'ins'}) {
+            $line1 .= $gap;
+            $line3 .= $Y->[$hunk->[1]];
+        }
+        elsif ($hunk->[2] eq $self->{'sub'}) {
+            $line1 .= $X->[$hunk->[0]];
+            $line3 .= $Y->[$hunk->[1]];
+        }
+        else {
+            $line1 .= $X->[$hunk->[0]];
+            $line3 .= $Y->[$hunk->[1]];
+        }
+    }
+
+    my $metrics = $self->_metrics( $X, $Y, $hunks );
+
+    $line2 .= $self->format_metrics($metrics);
+
+    return join("\n", ($line1, $line2, $line3)) . "\n";
+}
+
+sub format_metrics {
+    my ($self, $metrics ) = @_;
+
+    my $string =
+    	' distance: ' . $metrics->{'distance'} .
+    	' M: ' . $metrics->{'matches'} .
+    	' S: ' . $metrics->{'substitutions'} .
+    	' D: '. $metrics->{'deletes'} .
+    	' I: ' . $metrics->{'inserts'} .
+    	' Err: '  . sprintf('%.2f', $metrics->{'error-rate'}) .
+    	' Acc: '  . sprintf('%.2f', $metrics->{'accuracy'}) .
+    	' nErr: ' . sprintf('%.2f', $metrics->{'normalised error-rate'}) .
+    	' Sim: ' . sprintf('%.2f', $metrics->{'similarity'})
+    	;
+}
+
+sub metrics {
+    my ($self, $X, $Y ) = @_;
+
+    return $self->_metrics( $X, $Y, $self->ses( $X, $Y ) );
+}
+
+sub _metrics {
+    my ($self, $X, $Y, $hunks) = @_;
 
     my $match      = 0;
     my $substitute = 0;
     my $delete     = 0;
     my $insert     = 0;
 
+    my $metrics = {
+        'len1'          => scalar(@$X),
+        'len2'          => scalar(@$Y),
+        'matches'       => 0,
+        'substitutions' => 0,
+        'deletes'       => 0,
+        'inserts'       => 0,
+        'distance'      => 0,
+        'len-align'     => 0,
+        'error-rate'    => 2.0, # default for len1 == 0
+        'accuracy'      => 0,
+        'normalised error-rate' => 0,
+        'normalised similarity' => 1, # default for both empty
+        'similarity'    => 1, # default for both empty
+    };
+
     for my $hunk (@$hunks) {
-        $line2 .= $hunk->[2];
-        if ($hunk->[2] eq '-') {
-        	$delete++;
-            $line1 .= $X->[$hunk->[0]];
-            $line3 .= '_';
+        if ($hunk->[2] eq $self->{'del'}) {
+        	$metrics->{'deletes'}++;
         }
-        elsif ($hunk->[2] eq '+') {
+        elsif ($hunk->[2] eq $self->{'ins'}) {
+            $metrics->{'inserts'}++;
             $insert++;
-            $line1 .= '_';
-            $line3 .= $Y->[$hunk->[1]];
         }
-        elsif ($hunk->[2] eq '~') {
-            $substitute++;
-            $line1 .= $X->[$hunk->[0]];
-            $line3 .= $Y->[$hunk->[1]];
+        elsif ($hunk->[2] eq $self->{'sub'}) {
+            $metrics->{'substitutions'}++;
         }
         else {
-        	$match++;
-            $line1 .= $X->[$hunk->[0]];
-            $line3 .= $Y->[$hunk->[1]];
+        	$metrics->{'matches'}++;
         }
     }
 
-    my $distance = $substitute + $delete + $insert;
-    # CER = ( S + D + I ) / ( M + S + D )
-    my $CER  = $distance / ($match + $substitute + $delete);
-    # Accuracy = M       / ( M    + S + D + I )
-    my $Acc  = $match / ($match + $distance);
-    my $nCER = 1 - $Acc;
+    $metrics->{'distance'}
+        = $metrics->{'substitutions'} + $metrics->{'deletes'} + $metrics->{'inserts'};
 
-    print "\n";
-    print $line1,"\n";
-    print $line2,
-    	'  distance:', $distance,
-    	' M:', $match,
-    	' S:', $substitute,
-    	' D:', $delete,
-    	' I:', $insert,
-    	' CER:',  sprintf('%.2f', $CER),
-    	' Acc:',  sprintf('%.2f', $Acc),
-    	' nCER:', sprintf('%.2f', $nCER),
-    	"\n";
-    print $line3,"\n";
+    # CER = ( S + D + I ) / ( M + S + D )
+    $metrics->{'error-rate'}
+        = $metrics->{'distance'} / $metrics->{'len1'} if ( $metrics->{'len1'} );
+
+    $metrics->{'len-align'} = $metrics->{'matches'} + $metrics->{'distance'};
+
+    # Accuracy = M       / ( M    + S + D + I )
+    $metrics->{'accuracy'} = $metrics->{'matches'} / $metrics->{'len-align'};
+
+    $metrics->{'normalised error-rate'} = 1 - $metrics->{'accuracy'};
+
+    my $max_len = ($metrics->{'len1'} >= $metrics->{'len2'})
+        ? $metrics->{'len1'} : $metrics->{'len2'};
+
+    $metrics->{'normalised similarity'}
+        = 1 - ( $metrics->{'distance'} / $max_len )  if ( $max_len );
+
+    # similarity = matches * 2 / (length1 + length2)
+    $metrics->{'similarity'}
+        = $metrics->{'matches'} * 2 / ($metrics->{'len1'} + $metrics->{'len2'})
+            if ( $metrics->{'len1'} ||  $metrics->{'len2'} );
+
+    return $metrics;
 }
 
 sub align2strings {
   	my ($self, $hunks, $gap) = @_;
-  	$gap = (defined $gap) ? $gap : '_';
+
+  	$gap = (defined $gap) ? $gap : $self->{'gapchar'};
 
   	my $a = '';
   	my $b = '';
@@ -356,7 +458,7 @@ sub align2strings {
         }
     }
 
-  	return ($a,$b);
+  	return [$a, $b];
 }
 
 sub ses2align {
@@ -365,10 +467,10 @@ sub ses2align {
     my $align = [];
 
     for my $hunk (@$hunks) {
-        if ($hunk->[2] eq '-') {
+        if ($hunk->[2] eq $self->{'del'}) {
             push @$align,[ $X->[$hunk->[0]], '' ];
         }
-        elsif ($hunk->[2] eq '+') {
+        elsif ($hunk->[2] eq $self->{'ins'}) {
             push @$align,[ '', $Y->[$hunk->[1]] ];
         }
         else {
@@ -376,6 +478,36 @@ sub ses2align {
         }
     }
     return $align;
+}
+
+sub ses2none {
+    my ($self, $hunks) = @_;
+
+    my $none  = -1;
+    my $align = [];
+
+    for my $hunk (@$hunks) {
+        if ($hunk->[2] eq $self->{'del'}) {
+            push @$align,[ $hunk->[0], $none, $hunk->[2] ];
+        }
+        elsif ($hunk->[2] eq $self->{'ins'}) {
+            push @$align,[ $none, $hunk->[1], $hunk->[2] ];
+        }
+        else {
+            push @$align,[ $hunk->[0], $hunk->[1], $hunk->[2] ];
+        }
+    }
+    return $align;
+}
+
+sub ses2compact {
+    my ($self, $ses) = @_;
+
+    my $compact = '';
+
+    for my $hunk (@$ses) { $compact .= $hunk->[2]; }
+
+    return $compact;
 }
 
 sub min3 {
@@ -400,8 +532,6 @@ Levenshtein::Simple - Levenshtein algorithm in the simple variant
 
 =begin html
 
-<a href="https://travis-ci.org/wollmers/Levenshtein-Simple"><img src="https://travis-ci.org/wollmers/Levenshtein-Simple.png" alt="Levenshtein-Simple"></a>
-<a href='https://coveralls.io/r/wollmers/Levenshtein-Simple?branch=master'><img src='https://coveralls.io/repos/wollmers/Levenshtein-Simple/badge.png?branch=master' alt='Coverage Status' /></a>
 <a href='http://cpants.cpanauthors.org/dist/Levenshtein-Simple'><img src='http://cpants.cpanauthors.org/dist/Levenshtein-Simple.png' alt='Kwalitee Score' /></a>
 <a href="http://badge.fury.io/pl/Levenshtein-Simple"><img src="https://badge.fury.io/pl/Levenshtein-Simple.svg" alt="CPAN version" height="18"></a>
 
@@ -409,37 +539,95 @@ Levenshtein::Simple - Levenshtein algorithm in the simple variant
 
 =head1 SYNOPSIS
 
-  use LCS;
-  my $lcs = LCS->LCS( [qw(a b)], [qw(a b b)] );
+  use Levenshtein::Simple;
 
-  # $lcs now contains an arrayref of matching positions
+  my $lev = Levenshtein::Simple->new();
+
+  # we need arrays of strings
+  my @seq1 = split( //, 'sue' );
+  my @seq2 = split( //, 'use' );
+
+  my $distance = $lev->distance( [ @seq1 ], [ @seq2 ] );
+
+  print "distance: $distance", "\n";
+  distance: 2
+
+  my $ses = $lev->distance( [ @seq1 ], [ @seq2 ] );
+
+  # $ses now contains an arrayref of the shortest edit script
+
   # same as
-  $lcs = [
-    [ 0, 0 ],
-    [ 1, 2 ]
+  $ses = [
+    [0,0,+],
+    [0,1,=],
+    [1,1,-],
+    [2,2,=],
   ];
 
-  my $all_lcs = LCS->allLCS( [qw(a b)], [qw(a b b)] );
+  # generate all shortest edit scripts
+  my $all_ses = $lev->all_ses( [ @seq1 ], [ @seq2 ] );
 
-  # same as
-  $all_lcs = [
-    [
-      [ 0, 0 ],
-      [ 1, 1 ]
-    ],
-    [
-      [ 0, 0 ],
-      [ 1, 2 ]
-    ]
+  # same as (reformatted)
+  $all_ses = [
+    [ [0,0,~],          [1,1,~], [2,2,=] ],
+    [ [0,0,+], [0,1,=], [1,1,-], [2,2,=] ],
+    [ [0,0,-], [1,0,=], [1,1,+], [2,2,=] ],
   ];
+
+  # print the match matrix
+  print $lev->format_matrix( [ @seq1 ], [ @seq2 ] );
+
+  Levenshtein matrix of "sue" versus "use"
+
+      u s e
+    0 1 2 3
+  s 1 1 1 2
+  u 2 1 2 2
+  e 3 2 2 2
+
+  # print alignment
+  print $lev->format_alignment( [ @seq1 ], [ @seq2 ] );
+
+  _sue
+  +=-=  distance:2 M:2 S:0 D:1 I:1 ERR:0.67 Acc:0.50 nCER:0.50
+  us_e
+
+  # print all alignments
+  my $solutions  = $lev->all_ses( [ @seq1 ], [ @seq2 ] ) ;
+  for my $solution (@$solutions) {
+    print $lev->_format_alignment( [ @seq1 ], [ @seq2 ] , $solution ), "\n";
+  }
+
+  sue
+  ~~=  distance:2 M:1 S:2 D:0 I:0 ERR:0.67 Acc:0.33 nCER:0.67
+  use
+
+  _sue
+  +=-=  distance:2 M:2 S:0 D:1 I:1 ERR:0.67 Acc:0.50 nCER:0.50
+  us_e
+
+  su_e
+  -=+=  distance:2 M:2 S:0 D:1 I:1 ERR:0.67 Acc:0.50 nCER:0.50
+  _use
+
 
 =head1 DESCRIPTION
 
-LCS is an implementation based on the traditional Longest Common Subsequence algorithm.
+Levenshtein::Simple is an implementation based on the traditional Levenshtein algorithm.
 
-It contains reference implementations working slow but correct.
+It allows to compare two sequences and calculate the differences and where they are located.
+Main applications are spelling correction or DNA analysis.
 
-Also some utility methods are added to reformat the result.
+Sequences can consist of characters, graphemes, words, lines or anything that is comparable
+as string. Therefore we use array references (arrays of strings) as input and do not limit
+to strings as most implementations do.
+
+It contains reference implementations working moderately fast for the slow algorithm but
+correct. Internally it uses a match matrix and has exponential run time complexity O(m*n).
+This means, that the comparison of two sequences of length 10 need 10 * 10 = 100 iterations,
+and of length 100 need 100 * 100 = 10,000 iterations.
+
+Also some utility methods are added to format the results for diagnosis or exploration.
 
 =head2 CONSTRUCTOR
 
@@ -448,8 +636,25 @@ Also some utility methods are added to reformat the result.
 =item new()
 
 Creates a new object which maintains internal storage areas
-for the LCS computation.  Use one of these per concurrent
-LCS() call.
+for the Levenshtein computation. The methods need object mode.
+
+  my $lev = Levenshtein::Simple->new(
+    {
+        'gapchar'   => '_',    # default
+        'editchars' => '=~-+', # default
+    }
+  );
+
+Parameters are optional.
+
+- 'gapchar' must be a character. Choose another one if more convenient.
+
+- 'editchars' must be a string of 4 unique characters meaning in this order
+
+  '=' match (equal)
+  '~' substitution
+  '-' deletion
+  '+' insertion
 
 =back
 
@@ -457,167 +662,131 @@ LCS() call.
 
 =over 4
 
+=item ses(\@a, \@b)
 
-=item LCS(\@a, \@b)
-
-Finds a Longest Common Subsequence, taking two arrayrefs as method
+Finds a Shortest Edit Script (SES), taking two arrayrefs as method
 arguments. It returns an array reference of corresponding
-indices, which are represented by 2-element array refs.
+indices, which are represented by 3-element array refs.
 
-  # position  0 1 2
-  my $a = [qw(a b  )];
-  my $b = [qw(a b b)];
+  # position  0 1 2 3
+  my $a = [qw(g o l d)];
+  my $b = [qw(g l o w)];
 
-  my $lcs = LCS->LCS($a,$b);
-
-  # same like
-  $lcs = [
-      [ 0, 0 ],
-      [ 1, 1 ]
-  ];
-
-=item LLCS(\@a, \@b)
-
-Calculates the length of the Longest Common Subsequence.
-
-  my $llcs = LCS->LLCS( [qw(a b)], [qw(a b b)] );
-  print $llcs,"\n";   # prints 2
-
-  # is the same as
-  $llcs = scalar @{LCS->LCS( [qw(a b)], [qw(a b b)] )};
-
-=item allLCS(\@a, \@b)
-
-Finds all Longest Common Subsequences. It returns an array reference of all
-LCS.
-
-  # This example has 2 possible alignments:
-
-  # 1st alignment
-  # position  0 1 2
-  #        qw(a b  )
-  #        qw(a b b)
-
-  # 2nd alignment
-  # position  0 1 2
-  #          (a   b)
-  #          (a b b)
-
-  my $all_lcs = LCS->allLCS( [qw(a b)], [qw(a b b)] );
+  my $ses = $lev->ses($a,$b);
 
   # same as
-  $all_lcs = [
-    [             # 1st alignment
-      [ 0, 0 ],
-      [ 1, 1 ]
-    ],
-    [             # 2nd alignment
-      [ 0, 0 ],
-      [ 1, 2 ]
-    ]
+  $ses = [
+    [ 0, 0, '=' ], # match equal
+    [ 0, 1, '+' ], # insertion
+    [ 1, 2, '=' ], # match equal
+    [ 2, 3, '~' ], # substitution
+    [ 3, 3, '-' ]  # deletion
   ];
 
-The purpose is mainly for testing LCS algorithms, as they only return one of the possible
+NOTE: In case of deletion or insertion one of the indices is not undef or -1.
+
+=item distance(\@a, \@b)
+
+Calculates the length of the edit distance.
+
+  my $distance = $lev->distance( [ qw(g o l d) ], [ qw(g l o w) ] );
+  print $distance,"\n";   # prints 3
+
+Distance = substitutions + insertions + deletions.
+
+=item all_ses(\@a, \@b)
+
+Finds all Shortest Edit Scripts. It returns an array reference of all
+SES.
+
+  # This example has 3 possible alignments:
+
+  my $all_ses = $lev->all_ses( [ qw(s u e) ], [ qw(u s e) ] );
+
+  # same as
+  $all_ses = [
+    [ [0,0,'~'],            [1,1,'~'], [2,2,'='] ],
+    [ [0,0,'+'], [0,1,'='], [1,1,'-'], [2,2,'='] ],
+    [ [0,0,'-'], [1,0,'='], [1,1,'+'], [2,2,'='] ],
+  ];
+
+Note that all SES are optimal in the sense of minimal distance. Levenshtein minimises distance.
+In contrast LCS maximises matches.
+
+CAUTION: Use this method only with short sequences as it can have extreme runtimes with longer ones.
+
+The purpose is mainly for testing Levenshtein algorithms, as they only return one of the possible
 optimal solutions. If we want to know, that the result is one of the optimal solutions, we need
-to test, if the solution is part of all optimal LCS:
+to test, if the solution is part of all optimal SES:
 
   use Test::More;
   use Test::Deep;
-  use LCS;
-  use LCS::Tiny;
+  use Levenshtein::Simple;
+
+  my $lev = Levenshtein::Simple->new();
 
   cmp_deeply(
-    LCS::Tiny->LCS(\@a,\@b),
-    any( @{LCS->allLCS(\@a,\@b)} ),
-    "Tiny::LCS $a, $b"
+    $lev->ses( $X ,$Y ),
+    any( @{ $lev->all_ses($X, $Y) } )
   );
 
-=item lcs2align(\@a, \@b, $LCS)
+=item matrix(\@a, \@b)
 
-Returns the two sequences aligned, missing positions are represented as empty strings.
+Calculates the match matrix as 2-dimensional array length1+1 (rows) x length2+1 (columns).
+Note that the first element of a sequence has index 1 in the matrix, but index 0 in the
+original sequence array.
 
-  use Data::Dumper;
-  use LCS;
-  print Dumper(
-    LCS->lcs2align(
-      [qw(a   b)],
-      [qw(a b b)],
-      LCS->LCS([qw(a b)],[qw(a b b)])
-    )
-  );
-  # prints
+  my $matrix = $lev->matrix( [qw(g o l d)], [qw(g l o w)] );
 
-  $VAR1 = [
-            [
-              'a',
-              'a'
-            ],
-            [
-              '',
-              'b'
-            ],
-            [
-              'b',
-              'b'
-            ]
-  ];
+Returns the matrix as array reference.
 
-=item align(\@a,\@b)
+=item format_matrix(\@a, \@b)
 
-Returns the same as lcs2align() via calling LCS() itself.
+Formats the matrix human readable. Returns a string of concatenated lines.
 
-=item sequences2hunks($a, $b)
+  print $lev->format_matrix( [qw(g o l d)], [qw(g l o w)] );
 
-Transforms two array references of scalars to an array of hunks (two element arrays).
+  Levenshtein matrix of "gold" versus "glow"
 
-=item hunks2sequences($hunks)
+       g l o w
+     0 1 2 3 4
+   g 1 0 1 2 3
+   o 2 1 1 1 2
+   l 3 2 1 2 2
+   d 4 3 2 2 3
 
-Transforms an array of hunks to two arrays of scalars.
+=item _format_matrix(\@a, \@b, $matrix)
 
-  use Data::Dumper;
-  use LCS;
-  print Dumper(
-    LCS->hunks2sequences(
-      LCS->LCS([qw(a b)],[qw(a b b)])
-    )
-  );
-  # prints (reformatted)
-  $VAR1 = [ 0, 1 ];
-  $VAR2 = [ 0, 2 ];
+  my $matrix = $lev->matrix( [qw(g o l d)], [qw(g l o w)] );
+  print $lev->_format_matrix( [qw(g o l d)], [qw(g l o w)], $matrix );
 
+=item format_alignment_path(\@a, \@b)
 
-=item align2strings($hunks, $gap_character)
+Formats an SES human readable in pseudo array notation.
 
-Returns two strings aligned with a gap character. The default gap character is '_'.
+  my $alignment_path = $lev->format_alignment_path( [qw(g o l d)], [qw(g l o w)]);
+  print $alignment_path,"\n";
 
-  use Data::Dumper;
-  use LCS;
-  print Dumper(
-    LCS->align2strings(
-      LCS->lcs2align([qw(a b)],[qw(a b b)],LCS->LCS([qw(a b)],[qw(a b b)]))
-    )
-  );
-  $VAR1 = 'a_b';
-  $VAR2 = 'abb';
+  [ [0,0,=],[0,1,+],[1,2,=],[2,3,~],[3,3,-], ]
 
+=item _format_alignment_path(\@a, \@b, $ses)
 
-=item fill_strings($string1, $string2, $fill_character)
+  my $ses = $lev->ses( [qw(g o l d)], [qw(g l o w)]);
+  my $alignment_path
+    = $lev->_format_alignment_path( [qw(g o l d)], [qw(g l o w)], $ses );
+  print $alignment_path,"\n";
 
-Returns both strings filling up the shorter with $fill_character to the same length.
+=item format_alignment(\@a, \@b, $gap_character)
 
-The default $fill_character is '_'.
+Formats an SES into printable lines. Default for $gap_character is '_'.
 
-=item clcs2lcs($compact_lcs)
+Returns a string of concatenated lines.
 
-Convert compact LCS to LCS.
+  print $lev->format_alignment( [qw(g o l d)], [qw(g l o w)] );
 
-=item lcs2clcs($compact_lcs)
-
-Convert LCS to compact LCS.
-
-=item max($i, $j)
-
-Returns the maximum of two numbers.
+  g_old
+  =+=~-  distance: 3 M: 2 S: 1 D: 1 I: 1 Err: 0.75 Acc: 0.40 nErr: 0.60
+  glow_
 
 =back
 
@@ -641,10 +810,13 @@ http://arxiv.org/pdf/cs/0211001.pdf
 Robert A. Wagner and Michael J. Fischer. The string-to-string correction problem.
 Journal of the ACM, 21(1):168-173, 1974.
 
+Vladimir I. Levenshtein. Binary codes capable of correcting deletions, insertions, and reversals.
+Soviet Physics Doklady, 10(8):707–710, 1966.
+Original in Russian in Doklady Akademii Nauk SSSR, 163(4):845–848, 1965.
 
 =head1 SOURCE REPOSITORY
 
-L<http://github.com/wollmers/LCS>
+L<http://github.com/wollmers/Levenshtein-Simple>
 
 =head1 AUTHOR
 
@@ -666,6 +838,9 @@ This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.
 
 =head1 SEE ALSO
+
+L<Text::Levenshtein> Accepts only strings
+L<Text::Levenshtein::BV> Fast implementation in pure Perl
 
 =cut
 
