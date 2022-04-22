@@ -1,0 +1,726 @@
+
+
+helmut@mbp:~/github/perl/Levenshtein-Simple/xt$ perl 50_distance_bench.t 
+
+Levenshtein PP modules
+
+             Rate     T::WF      T::L L::Simple   T::Fuzz
+T::WF      5023/s        --      -21%      -44%      -55%
+T::L       6399/s       27%        --      -29%      -43%
+L::Simple  8967/s       79%       40%        --      -20%
+T::Fuzz   11164/s      122%       74%       25%        --
+
+             Rate     T::WF      T::L L::Simple   T::Fuzz
+T::WF      5493/s        --      -16%      -44%      -55%
+T::L       6515/s       19%        --      -33%      -47%
+L::Simple  9774/s       78%       50%        --      -20%
+T::Fuzz   12217/s      122%       88%       25%        --
+
+             Rate     T::WF      T::L L::Simple   T::Fuzz
+T::WF      6636/s        --      -19%      -45%      -54%
+T::L       8145/s       23%        --      -33%      -43%
+L::Simple 12107/s       82%       49%        --      -16%
+T::Fuzz   14354/s      116%       76%       19%        --
+
+           Rate     T::WF      T::L L::Simple   T::Fuzz
+T::WF     222/s        --      -22%      -48%      -57%
+T::L      284/s       28%        --      -33%      -45%
+L::Simple 424/s       91%       49%        --      -17%
+T::Fuzz   513/s      131%       81%       21%        --
+
+           Rate     T::WF      T::L L::Simple   T::Fuzz
+T::WF     205/s        --      -22%      -48%      -58%
+T::L      262/s       28%        --      -33%      -46%
+L::Simple 392/s       92%       50%        --      -19%
+T::Fuzz   482/s      136%       84%       23%        --
+
+            Rate     T::WF      T::L L::Simple   T::Fuzz
+T::WF     59.4/s        --      -13%      -46%      -59%
+T::L      68.5/s       15%        --      -38%      -53%
+L::Simple  110/s       85%       61%        --      -24%
+T::Fuzz    145/s      144%      112%       32%        --
+1..18
+
+helmut@mbp:~/github/perl/Levenshtein-Simple/xt$ perl 50_distance_bench.t
+
+### init only first row and first column with 0
+
++0.9% 
+
+Levenshtein PP modules
+ok 1 - ASCII len~10: Chrerrplzon, Choerephon Text::Fuzzy::PP distance == 4
+             Rate     T::WF      T::L L::Simple   T::Fuzz
+T::WF      4931/s        --      -23%      -46%      -57%
+T::L       6399/s       30%        --      -29%      -45%
+L::Simple  9050/s       84%       41%        --      -22%
+T::Fuzz   11598/s      135%       81%       28%        --
+ok 2 - UTF-8 len~10: ſhoereſhoſ, Choerephon Text::Fuzzy::PP distance == 3
+             Rate     T::WF      T::L L::Simple   T::Fuzz
+T::WF      5531/s        --      -18%      -44%      -54%
+T::L       6719/s       21%        --      -32%      -45%
+L::Simple  9863/s       78%       47%        --      -19%
+T::Fuzz   12107/s      119%       80%       23%        --
+ok 3 - UTF-8 10/8: "ⓕⓞaⓤⓡ"x2, "aⓕⓞⓡ"x2 Text::Fuzzy::PP distance == 6
+             Rate     T::WF      T::L L::Simple   T::Fuzz
+T::WF      6636/s        --      -19%      -47%      -55%
+T::L       8145/s       23%        --      -35%      -45%
+L::Simple 12524/s       89%       54%        --      -15%
+T::Fuzz   14769/s      123%       81%       18%        --
+ok 4 - ASCII len=51: a..zA..Y, b..zA..Z Text::Fuzzy::PP distance == 2
+           Rate     T::WF      T::L L::Simple   T::Fuzz
+T::WF     222/s        --      -22%      -49%      -59%
+T::L      285/s       28%        --      -35%      -47%
+L::Simple 435/s       96%       53%        --      -19%
+T::Fuzz   540/s      143%       89%       24%        --
+ok 5 - ASCII prefix/suffix: a..z0A..Z, a..z1A..Z Text::Fuzzy::PP distance == 1
+           Rate     T::WF      T::L L::Simple   T::Fuzz
+T::WF     213/s        --      -17%      -44%      -57%
+T::L      258/s       21%        --      -33%      -48%
+L::Simple 384/s       80%       49%        --      -23%
+T::Fuzz   496/s      133%       92%       29%        --
+ok 6 - UTF-8 100/100: "ⓕⓞaⓤⓡ"x20, "aⓕⓞⓡ"x25 Text::Fuzzy::PP distance == 65
+            Rate     T::WF      T::L L::Simple   T::Fuzz
+T::WF     59.8/s        --      -13%      -48%      -59%
+T::L      69.1/s       16%        --      -40%      -53%
+L::Simple  115/s       93%       67%        --      -21%
+T::Fuzz    146/s      145%      112%       27%        --
+1..6
+
+### using array instead of array_ref
++0.9%
+
+
+Levenshtein PP modules
+ok 1 - ASCII len~10: Chrerrplzon, Choerephon Text::Fuzzy::PP distance == 4
+             Rate     T::WF      T::L L::Simple   T::Fuzz
+T::WF      4931/s        --      -11%      -46%      -57%
+T::L       5531/s       12%        --      -39%      -51%
+L::Simple  9135/s       85%       65%        --      -20%
+T::Fuzz   11395/s      131%      106%       25%        --
+ok 2 - UTF-8 len~10: ſhoereſhoſ, Choerephon Text::Fuzzy::PP distance == 3
+             Rate     T::WF      T::L L::Simple   T::Fuzz
+T::WF      5381/s        --       -2%      -46%      -55%
+T::L       5480/s        2%        --      -45%      -55%
+L::Simple 10048/s       87%       83%        --      -17%
+T::Fuzz   12047/s      124%      120%       20%        --
+ok 3 - UTF-8 10/8: "ⓕⓞaⓤⓡ"x2, "aⓕⓞⓡ"x2 Text::Fuzzy::PP distance == 6
+             Rate     T::WF      T::L L::Simple   T::Fuzz
+T::WF      6457/s        --       -5%      -48%      -56%
+T::L       6826/s        6%        --      -45%      -54%
+L::Simple 12329/s       91%       81%        --      -17%
+T::Fuzz   14769/s      129%      116%       20%        --
+ok 4 - ASCII len=51: a..zA..Y, b..zA..Z Text::Fuzzy::PP distance == 2
+           Rate     T::WF      T::L L::Simple   T::Fuzz
+T::WF     228/s        --       -7%      -46%      -58%
+T::L      246/s        8%        --      -42%      -55%
+L::Simple 426/s       86%       73%        --      -22%
+T::Fuzz   543/s      138%      121%       27%        --
+ok 5 - ASCII prefix/suffix: a..z0A..Z, a..z1A..Z Text::Fuzzy::PP distance == 1
+           Rate     T::WF      T::L L::Simple   T::Fuzz
+T::WF     206/s        --       -8%      -50%      -59%
+T::L      224/s        9%        --      -45%      -55%
+L::Simple 407/s       98%       82%        --      -18%
+T::Fuzz   496/s      141%      121%       22%        --
+ok 6 - UTF-8 100/100: "ⓕⓞaⓤⓡ"x20, "aⓕⓞⓡ"x25 Text::Fuzzy::PP distance == 65
+            Rate      T::L     T::WF L::Simple   T::Fuzz
+T::L      58.2/s        --       -1%      -50%      -60%
+T::WF     58.7/s        1%        --      -50%      -60%
+L::Simple  117/s      100%       98%        --      -20%
+T::Fuzz    146/s      151%      149%       25%        --
+1..6
+
+### inline subroutine matrix
++3,9%
+
+Levenshtein PP modules
+ok 1 - ASCII len~10: Chrerrplzon, Choerephon Text::Fuzzy::PP distance == 4
+             Rate     T::WF      T::L L::Simple   T::Fuzz
+T::WF      5097/s        --      -21%      -46%      -55%
+T::L       6446/s       26%        --      -32%      -43%
+L::Simple  9489/s       86%       47%        --      -17%
+T::Fuzz   11377/s      123%       77%       20%        --
+ok 2 - UTF-8 len~10: ſhoereſhoſ, Choerephon Text::Fuzzy::PP distance == 3
+             Rate     T::WF      T::L L::Simple   T::Fuzz
+T::WF      5531/s        --      -15%      -47%      -55%
+T::L       6524/s       18%        --      -37%      -47%
+L::Simple 10383/s       88%       59%        --      -16%
+T::Fuzz   12401/s      124%       90%       19%        --
+ok 3 - UTF-8 10/8: "ⓕⓞaⓤⓡ"x2, "aⓕⓞⓡ"x2 Text::Fuzzy::PP distance == 6
+             Rate     T::WF      T::L L::Simple   T::Fuzz
+T::WF      6575/s        --      -16%      -48%      -56%
+T::L       7859/s       20%        --      -37%      -48%
+L::Simple 12560/s       91%       60%        --      -16%
+T::Fuzz   15037/s      129%       91%       20%        --
+ok 4 - ASCII len=51: a..zA..Y, b..zA..Z Text::Fuzzy::PP distance == 2
+           Rate     T::WF      T::L L::Simple   T::Fuzz
+T::WF     228/s        --      -18%      -47%      -57%
+T::L      280/s       23%        --      -35%      -48%
+L::Simple 430/s       88%       54%        --      -19%
+T::Fuzz   533/s      134%       91%       24%        --
+ok 5 - ASCII prefix/suffix: a..z0A..Z, a..z1A..Z Text::Fuzzy::PP distance == 1
+           Rate     T::WF      T::L L::Simple   T::Fuzz
+T::WF     208/s        --      -22%      -49%      -58%
+T::L      267/s       28%        --      -34%      -46%
+L::Simple 407/s       95%       53%        --      -18%
+T::Fuzz   495/s      137%       86%       22%        --
+ok 6 - UTF-8 100/100: "ⓕⓞaⓤⓡ"x20, "aⓕⓞⓡ"x25 Text::Fuzzy::PP distance == 65
+            Rate     T::WF      T::L L::Simple   T::Fuzz
+T::WF     59.3/s        --      -13%      -48%      -58%
+T::L      68.5/s       16%        --      -40%      -52%
+L::Simple  114/s       93%       67%        --      -20%
+T::Fuzz    143/s      141%      108%       25%        --
+1..6
+
+### remove variable costs, use (1,1,1)
++12,5%
+
+Levenshtein PP modules
+ok 1 - ASCII len~10: Chrerrplzon, Choerephon Text::Fuzzy::PP distance == 4
+             Rate     T::WF      T::L L::Simple   T::Fuzz
+T::WF      5093/s        --      -20%      -52%      -56%
+T::L       6400/s       26%        --      -40%      -45%
+L::Simple 10676/s      110%       67%        --       -8%
+T::Fuzz   11622/s      128%       82%        9%        --
+ok 2 - UTF-8 len~10: ſhoereſhoſ, Choerephon Text::Fuzzy::PP distance == 3
+             Rate     T::WF      T::L L::Simple   T::Fuzz
+T::WF      5389/s        --      -17%      -54%      -56%
+T::L       6461/s       20%        --      -45%      -47%
+L::Simple 11712/s      117%       81%        --       -4%
+T::Fuzz   12217/s      127%       89%        4%        --
+ok 3 - UTF-8 10/8: "ⓕⓞaⓤⓡ"x2, "aⓕⓞⓡ"x2 Text::Fuzzy::PP distance == 6
+             Rate     T::WF      T::L   T::Fuzz L::Simple
+T::WF      6587/s        --      -14%      -55%      -57%
+T::L       7657/s       16%        --      -47%      -50%
+T::Fuzz   14498/s      120%       89%        --       -4%
+L::Simple 15175/s      130%       98%        5%        --
+ok 4 - ASCII len=51: a..zA..Y, b..zA..Z Text::Fuzzy::PP distance == 2
+           Rate     T::WF      T::L L::Simple   T::Fuzz
+T::WF     230/s        --      -18%      -50%      -56%
+T::L      280/s       21%        --      -40%      -46%
+L::Simple 465/s      102%       66%        --      -11%
+T::Fuzz   521/s      126%       86%       12%        --
+ok 5 - ASCII prefix/suffix: a..z0A..Z, a..z1A..Z Text::Fuzzy::PP distance == 1
+           Rate     T::WF      T::L L::Simple   T::Fuzz
+T::WF     214/s        --      -16%      -51%      -56%
+T::L      256/s       19%        --      -42%      -47%
+L::Simple 439/s      105%       72%        --      -10%
+T::Fuzz   487/s      127%       90%       11%        --
+ok 6 - UTF-8 100/100: "ⓕⓞaⓤⓡ"x20, "aⓕⓞⓡ"x25 Text::Fuzzy::PP distance == 65
+            Rate     T::WF      T::L L::Simple   T::Fuzz
+T::WF     59.3/s        --      -15%      -58%      -59%
+T::L      69.7/s       18%        --      -50%      -52%
+L::Simple  141/s      138%      102%        --       -4%
+T::Fuzz    146/s      147%      110%        4%        --
+1..6
+
+### inline max3()
++19,9% and still array-refs as input
+
+start: L::Simple   8967/s
+now:   L::Simple  12800/s
+gain:  (12800/8967) - 1 = 1.427 - 1 = 0.427
+
+Levenshtein PP modules
+ok 1 - ASCII len~10: Chrerrplzon, Choerephon Text::Fuzzy::PP distance == 4
+             Rate     T::WF      T::L   T::Fuzz L::Simple
+T::WF      5097/s        --      -19%      -55%      -60%
+T::L       6288/s       23%        --      -45%      -51%
+T::Fuzz   11377/s      123%       81%        --      -11%
+L::Simple 12800/s      151%      104%       13%        --
+ok 2 - UTF-8 len~10: ſhoereſhoſ, Choerephon Text::Fuzzy::PP distance == 3
+             Rate     T::WF      T::L   T::Fuzz L::Simple
+T::WF      5389/s        --      -20%      -57%      -60%
+T::L       6698/s       24%        --      -46%      -51%
+T::Fuzz   12444/s      131%       86%        --       -8%
+L::Simple 13593/s      152%      103%        9%        --
+ok 3 - UTF-8 10/8: "ⓕⓞaⓤⓡ"x2, "aⓕⓞⓡ"x2 Text::Fuzzy::PP distance == 6
+             Rate     T::WF      T::L   T::Fuzz L::Simple
+T::WF      6508/s        --      -19%      -56%      -63%
+T::L       8071/s       24%        --      -46%      -54%
+T::Fuzz   14902/s      129%       85%        --      -15%
+L::Simple 17454/s      168%      116%       17%        --
+ok 4 - ASCII len=51: a..zA..Y, b..zA..Z Text::Fuzzy::PP distance == 2
+           Rate     T::WF      T::L   T::Fuzz L::Simple
+T::WF     230/s        --      -18%      -56%      -58%
+T::L      280/s       22%        --      -46%      -49%
+T::Fuzz   517/s      125%       85%        --       -6%
+L::Simple 550/s      139%       96%        6%        --
+ok 5 - ASCII prefix/suffix: a..z0A..Z, a..z1A..Z Text::Fuzzy::PP distance == 1
+           Rate     T::WF      T::L   T::Fuzz L::Simple
+T::WF     214/s        --      -17%      -56%      -58%
+T::L      257/s       20%        --      -47%      -50%
+T::Fuzz   482/s      125%       88%        --       -6%
+L::Simple 514/s      140%      100%        7%        --
+ok 6 - UTF-8 100/100: "ⓕⓞaⓤⓡ"x20, "aⓕⓞⓡ"x25 Text::Fuzzy::PP distance == 65
+            Rate     T::WF      T::L   T::Fuzz L::Simple
+T::WF     59.8/s        --      -15%      -60%      -63%
+T::L      70.4/s       18%        --      -52%      -56%
+T::Fuzz    148/s      147%      110%        --       -8%
+L::Simple  161/s      170%      129%        9%        --
+1..6
+
+### prefix/suffix optimisation
++122% 
+
+start: L::Simple   8967/s
+now:   L::Simple  28444/s
+gain:  (28444/8967) - 1 = 3.17 - 1 = 2.17
+
+Levenshtein PP modules
+ok 1 - ASCII len~10: Chrerrplzon, Choerephon Text::Fuzzy::PP distance == 4
+             Rate     T::WF      T::L   T::Fuzz L::Simple
+T::WF      4977/s        --      -19%      -56%      -83%
+T::L       6165/s       24%        --      -46%      -78%
+T::Fuzz   11395/s      129%       85%        --      -60%
+L::Simple 28444/s      472%      361%      150%        --
+ok 2 - UTF-8 len~10: ſhoereſhoſ, Choerephon Text::Fuzzy::PP distance == 3
+             Rate     T::WF      T::L   T::Fuzz L::Simple
+T::WF      5338/s        --      -19%      -56%      -58%
+T::L       6575/s       23%        --      -46%      -48%
+T::Fuzz   12107/s      127%       84%        --       -4%
+L::Simple 12670/s      137%       93%        5%        --
+ok 3 - UTF-8 10/8: "ⓕⓞaⓤⓡ"x2, "aⓕⓞⓡ"x2 Text::Fuzzy::PP distance == 6
+             Rate     T::WF      T::L   T::Fuzz L::Simple
+T::WF      6826/s        --      -13%      -54%      -67%
+T::L       7876/s       15%        --      -47%      -62%
+T::Fuzz   14902/s      118%       89%        --      -28%
+L::Simple 20577/s      201%      161%       38%        --
+ok 4 - ASCII len=51: a..zA..Y, b..zA..Z Text::Fuzzy::PP distance == 2
+           Rate     T::WF      T::L   T::Fuzz L::Simple
+T::WF     232/s        --      -18%      -55%      -55%
+T::L      285/s       23%        --      -45%      -45%
+T::Fuzz   517/s      122%       81%        --       -0%
+L::Simple 517/s      122%       81%        0%        --
+ok 5 - ASCII prefix/suffix: a..z0A..Z, a..z1A..Z Text::Fuzzy::PP distance == 1
+              Rate     T::WF      T::L   T::Fuzz L::Simple
+T::WF        213/s        --      -19%      -57%     -100%
+T::L         263/s       23%        --      -46%     -100%
+T::Fuzz      491/s      130%       87%        --     -100%
+L::Simple 108742/s    50859%    41258%    22028%        --
+ok 6 - UTF-8 100/100: "ⓕⓞaⓤⓡ"x20, "aⓕⓞⓡ"x25 Text::Fuzzy::PP distance == 65
+            Rate     T::WF      T::L   T::Fuzz L::Simple
+T::WF     58.7/s        --      -17%      -60%      -63%
+T::L      70.4/s       20%        --      -52%      -56%
+T::Fuzz    148/s      152%      110%        --       -8%
+L::Simple  160/s      173%      127%        8%        --
+1..6
+
+### use for (1..$m) instead of C-style loop
+slower in some cases
+lexical for my $i (1..$m) slower than predefined $i
+
+Levenshtein PP modules
+ok 1 - ASCII len~10: Chrerrplzon, Choerephon Text::Fuzzy::PP distance == 4
+             Rate     T::WF      T::L   T::Fuzz L::Simple
+T::WF      4886/s        --      -22%      -57%      -83%
+T::L       6280/s       29%        --      -45%      -78%
+T::Fuzz   11487/s      135%       83%        --      -59%
+L::Simple 28110/s      475%      348%      145%        --
+ok 2 - UTF-8 len~10: ſhoereſhoſ, Choerephon Text::Fuzzy::PP distance == 3
+             Rate     T::WF      T::L   T::Fuzz L::Simple
+T::WF      5333/s        --      -19%      -57%      -60%
+T::L       6575/s       23%        --      -47%      -51%
+T::Fuzz   12329/s      131%       88%        --       -7%
+L::Simple 13306/s      150%      102%        8%        --
+ok 3 - UTF-8 10/8: "ⓕⓞaⓤⓡ"x2, "aⓕⓞⓡ"x2 Text::Fuzzy::PP distance == 6
+             Rate     T::WF      T::L   T::Fuzz L::Simple
+T::WF      6699/s        --      -14%      -55%      -68%
+T::L       7802/s       16%        --      -47%      -63%
+T::Fuzz   14769/s      120%       89%        --      -30%
+L::Simple 21081/s      215%      170%       43%        --
+ok 4 - ASCII len=51: a..zA..Y, b..zA..Z Text::Fuzzy::PP distance == 2
+           Rate     T::WF      T::L   T::Fuzz L::Simple
+T::WF     228/s        --      -18%      -57%      -58%
+T::L      279/s       22%        --      -47%      -49%
+T::Fuzz   530/s      132%       90%        --       -3%
+L::Simple 550/s      141%       97%        4%        --
+ok 5 - ASCII prefix/suffix: a..z0A..Z, a..z1A..Z Text::Fuzzy::PP distance == 1
+              Rate     T::WF      T::L   T::Fuzz L::Simple
+T::WF        212/s        --      -19%      -56%     -100%
+T::L         261/s       23%        --      -46%     -100%
+T::Fuzz      487/s      129%       87%        --     -100%
+L::Simple 107184/s    50368%    41006%    21918%        --
+ok 6 - UTF-8 100/100: "ⓕⓞaⓤⓡ"x20, "aⓕⓞⓡ"x25 Text::Fuzzy::PP distance == 65
+            Rate     T::WF      T::L   T::Fuzz L::Simple
+T::WF     59.3/s        --      -14%      -60%      -65%
+T::L      69.1/s       17%        --      -54%      -59%
+T::Fuzz    149/s      151%      116%        --      -12%
+L::Simple  169/s      185%      145%       13%        --
+1..6
+
+#######
+
+Levenshtein PP modules
+ok 1 - ASCII len~10: Chrerrplzon, Choerephon Text::Fuzzy::PP distance == 4
+ok 2 - ASCII len~10: Chrerrplzon, Choerephon Text::Levenshtein::BV distance == 4
+
+              Rate     T::WF      T::L   T::Fuzz L::Simple  T::L::BV
+T::WF       5069/s        --      -21%      -56%      -82%      -96%
+T::L        6399/s       26%        --      -44%      -77%      -95%
+T::Fuzz    11522/s      127%       80%        --      -58%      -91%
+L::Simple  27569/s      444%      331%      139%        --      -77%
+T::L::BV  121406/s     2295%     1797%      954%      340%        --
+
+ok 3 - UTF-8 len~10: ſhoereſhoſ, Choerephon Text::Fuzzy::PP distance == 3
+ok 4 - UTF-8 len~10: ſhoereſhoſ, Choerephon Text::Levenshtein::BV distance == 3
+
+             Rate     T::WF      T::L   T::Fuzz L::Simple  T::L::BV
+T::WF      5430/s        --      -19%      -56%      -58%      -94%
+T::L       6698/s       23%        --      -45%      -49%      -93%
+T::Fuzz   12217/s      125%       82%        --       -6%      -87%
+L::Simple 13032/s      140%       95%        7%        --      -86%
+T::L::BV  92789/s     1609%     1285%      659%      612%        --
+
+ok 5 - UTF-8 10/8: "ⓕⓞaⓤⓡ"x2, "aⓕⓞⓡ"x2 Text::Fuzzy::PP distance == 6
+ok 6 - UTF-8 10/8: "ⓕⓞaⓤⓡ"x2, "aⓕⓞⓡ"x2 Text::Levenshtein::BV distance == 6
+
+              Rate     T::WF      T::L   T::Fuzz L::Simple  T::L::BV
+T::WF       6762/s        --      -14%      -55%      -66%      -94%
+T::L        7876/s       16%        --      -47%      -61%      -93%
+T::Fuzz    14902/s      120%       89%        --      -26%      -87%
+L::Simple  20031/s      196%      154%       34%        --      -82%
+T::L::BV  111348/s     1547%     1314%      647%      456%        --
+
+ok 7 - ASCII len=51: a..zA..Y, b..zA..Z Text::Fuzzy::PP distance == 2
+ok 8 - ASCII len=51: a..zA..Y, b..zA..Z Text::Levenshtein::BV distance == 2
+
+             Rate     T::WF      T::L   T::Fuzz L::Simple  T::L::BV
+T::WF       221/s        --      -22%      -58%      -59%      -99%
+T::L        282/s       28%        --      -47%      -48%      -99%
+T::Fuzz     532/s      141%       89%        --       -2%      -97%
+L::Simple   545/s      146%       93%        2%        --      -97%
+T::L::BV  20479/s     9154%     7152%     3747%     3660%        --
+
+ok 9 - ASCII prefix/suffix: a..z0A..Z, a..z1A..Z Text::Fuzzy::PP distance == 1
+ok 10 - ASCII prefix/suffix: a..z0A..Z, a..z1A..Z Text::Levenshtein::BV distance == 1
+
+              Rate     T::WF      T::L   T::Fuzz L::Simple  T::L::BV
+T::WF        204/s        --      -23%      -59%     -100%     -100%
+T::L         266/s       30%        --      -47%     -100%     -100%
+T::Fuzz      500/s      145%       88%        --     -100%     -100%
+L::Simple 107789/s    52768%    40466%    21458%        --       -4%
+T::L::BV  111708/s    54690%    41941%    22242%        4%        --
+
+ok 11 - UTF-8 50/48: "ⓕⓞaⓤⓡ"x10, "aⓕⓞⓡ"x12 Text::Fuzzy::PP distance == 32
+ok 12 - UTF-8 50/48: "ⓕⓞaⓤⓡ"x10, "aⓕⓞⓡ"x12 Text::Levenshtein::BV distance == 32
+
+             Rate     T::WF      T::L   T::Fuzz L::Simple  T::L::BV
+T::WF       237/s        --      -17%      -60%      -65%      -99%
+T::L        285/s       20%        --      -52%      -58%      -99%
+T::Fuzz     592/s      150%      108%        --      -13%      -98%
+L::Simple   684/s      188%      140%       16%        --      -97%
+T::L::BV  24216/s    10105%     8396%     3989%     3438%        --
+1..12
+
+helmut@mbp:~/github/perl/Levenshtein-Simple/xt$ time perl 50_distance_bench.t 
+
+Levenshtein XS modules
+ok 1 - ASCII len~10: Chrerrplzon, Choerephon Text::Fuzzy distance == 4
+ok 2 - ASCII len~10: Chrerrplzon, Choerephon Text::Levenshtein::Flexible distance == 4
+ok 3 - ASCII len~10: Chrerrplzon, Choerephon Text::Levenshtein::XS distance == 4
+              Rate   TL::XS TL::Flex  T::Fuzz
+TL::XS    348242/s       --     -87%     -88%
+TL::Flex 2621439/s     653%       --     -13%
+T::Fuzz  2998379/s     761%      14%       --
+ok 4 - UTF-8 len~10: ſhoereſhoſ, Choerephon Text::Fuzzy distance == 3
+ok 5 - UTF-8 len~10: ſhoereſhoſ, Choerephon Text::Levenshtein::Flexible distance == 3
+ok 6 - UTF-8 len~10: ſhoereſhoſ, Choerephon Text::Levenshtein::XS distance == 3
+              Rate   TL::XS TL::Flex  T::Fuzz
+TL::XS    382293/s       --     -81%     -86%
+TL::Flex 1978800/s     418%       --     -27%
+T::Fuzz  2726641/s     613%      38%       --
+ok 7 - UTF-8 10/8: "ⓕⓞaⓤⓡ"x2, "aⓕⓞⓡ"x2 Text::Fuzzy distance == 6
+ok 8 - UTF-8 10/8: "ⓕⓞaⓤⓡ"x2, "aⓕⓞⓡ"x2 Text::Levenshtein::Flexible distance == 6
+ok 9 - UTF-8 10/8: "ⓕⓞaⓤⓡ"x2, "aⓕⓞⓡ"x2 Text::Levenshtein::XS distance == 6
+              Rate   TL::XS TL::Flex  T::Fuzz
+TL::XS    387459/s       --     -81%     -86%
+TL::Flex 2075800/s     436%       --     -22%
+T::Fuzz  2672342/s     590%      29%       --
+ok 10 - ASCII len=51: a..zA..Y, b..zA..Z Text::Fuzzy distance == 2
+ok 11 - ASCII len=51: a..zA..Y, b..zA..Z Text::Levenshtein::Flexible distance == 2
+ok 12 - ASCII len=51: a..zA..Y, b..zA..Z Text::Levenshtein::XS distance == 2
+             Rate   TL::XS TL::Flex  T::Fuzz
+TL::XS    76799/s       --     -61%     -75%
+TL::Flex 197283/s     157%       --     -36%
+T::Fuzz  306652/s     299%      55%       --
+ok 13 - ASCII prefix/suffix: a..z0A..Z, a..z1A..Z Text::Fuzzy distance == 1
+ok 14 - ASCII prefix/suffix: a..z0A..Z, a..z1A..Z Text::Levenshtein::Flexible distance == 1
+ok 15 - ASCII prefix/suffix: a..z0A..Z, a..z1A..Z Text::Levenshtein::XS distance == 1
+             Rate   TL::XS TL::Flex  T::Fuzz
+TL::XS    74472/s       --     -61%     -75%
+TL::Flex 189150/s     154%       --     -35%
+T::Fuzz  292322/s     293%      55%       --
+ok 16 - UTF-8 50/48: "ⓕⓞaⓤⓡ"x10, "aⓕⓞⓡ"x12 Text::Fuzzy distance == 32
+ok 17 - UTF-8 50/48: "ⓕⓞaⓤⓡ"x10, "aⓕⓞⓡ"x12 Text::Levenshtein::Flexible distance == 32
+ok 18 - UTF-8 50/48: "ⓕⓞaⓤⓡ"x10, "aⓕⓞⓡ"x12 Text::Levenshtein::XS distance == 32
+             Rate   TL::XS TL::Flex  T::Fuzz
+TL::XS    79644/s       --     -60%     -66%
+TL::Flex 200386/s     152%       --     -14%
+T::Fuzz  231848/s     191%      16%       --
+
+###########
+
+helmut@mbp:~/github/perl/Levenshtein-Simple/xt$ time perl 50_distance_bench.t
+
+Levenshtein XS modules
+ok 1 - ASCII len~10: Chrerrplzon, Choerephon Text::Fuzzy distance == 4
+ok 2 - ASCII len~10: Chrerrplzon, Choerephon Text::Levenshtein::Flexible distance == 4
+ok 3 - ASCII len~10: Chrerrplzon, Choerephon Text::Levenshtein::XS distance == 4
+              Rate   TL::XS TL::Flex  T::Fuzz
+TL::XS    348918/s       --     -87%     -88%
+TL::Flex 2682760/s     669%       --     -11%
+T::Fuzz  3026401/s     767%      13%       --
+ok 4 - UTF-8 len~10: ſhoereſhoſ, Choerephon Text::Fuzzy distance == 3
+ok 5 - UTF-8 len~10: ſhoereſhoſ, Choerephon Text::Levenshtein::Flexible distance == 3
+ok 6 - UTF-8 len~10: ſhoereſhoſ, Choerephon Text::Levenshtein::XS distance == 3
+              Rate   TL::XS TL::Flex  T::Fuzz
+TL::XS    374797/s       --     -81%     -86%
+TL::Flex 1960478/s     423%       --     -25%
+T::Fuzz  2621439/s     599%      34%       --
+ok 7 - UTF-8 10/8: "ⓕⓞaⓤⓡ"x2, "aⓕⓞⓡ"x2 Text::Fuzzy distance == 6
+ok 8 - UTF-8 10/8: "ⓕⓞaⓤⓡ"x2, "aⓕⓞⓡ"x2 Text::Levenshtein::Flexible distance == 6
+ok 9 - UTF-8 10/8: "ⓕⓞaⓤⓡ"x2, "aⓕⓞⓡ"x2 Text::Levenshtein::XS distance == 6
+              Rate   TL::XS TL::Flex  T::Fuzz
+TL::XS    394568/s       --     -81%     -85%
+TL::Flex 2047999/s     419%       --     -23%
+T::Fuzz  2672341/s     577%      30%       --
+ok 10 - ASCII len=51: a..zA..Y, b..zA..Z Text::Fuzzy distance == 2
+ok 11 - ASCII len=51: a..zA..Y, b..zA..Z Text::Levenshtein::Flexible distance == 2
+ok 12 - ASCII len=51: a..zA..Y, b..zA..Z Text::Levenshtein::XS distance == 2
+             Rate   TL::XS TL::Flex  T::Fuzz
+TL::XS    75851/s       --     -62%     -75%
+TL::Flex 197283/s     160%       --     -34%
+T::Fuzz  297890/s     293%      51%       --
+ok 13 - ASCII prefix/suffix: a..z0A..Z, a..z1A..Z Text::Fuzzy distance == 1
+ok 14 - ASCII prefix/suffix: a..z0A..Z, a..z1A..Z Text::Levenshtein::Flexible distance == 1
+ok 15 - ASCII prefix/suffix: a..z0A..Z, a..z1A..Z Text::Levenshtein::XS distance == 1
+             Rate   TL::XS TL::Flex  T::Fuzz
+TL::XS    72404/s       --     -62%     -75%
+TL::Flex 192752/s     166%       --     -34%
+T::Fuzz  292322/s     304%      52%       --
+ok 16 - UTF-8 50/48: "ⓕⓞaⓤⓡ"x10, "aⓕⓞⓡ"x12 Text::Fuzzy distance == 32
+ok 17 - UTF-8 50/48: "ⓕⓞaⓤⓡ"x10, "aⓕⓞⓡ"x12 Text::Levenshtein::Flexible distance == 32
+ok 18 - UTF-8 50/48: "ⓕⓞaⓤⓡ"x10, "aⓕⓞⓡ"x12 Text::Levenshtein::XS distance == 32
+             Rate   TL::XS TL::Flex  T::Fuzz
+TL::XS    78913/s       --     -59%     -66%
+TL::Flex 192752/s     144%       --     -16%
+T::Fuzz  229681/s     191%      19%       --
+
+Levenshtein PP modules
+ok 19 - ASCII len~10: Chrerrplzon, Choerephon Text::Fuzzy::PP distance == 4
+ok 20 - ASCII len~10: Chrerrplzon, Choerephon Text::Levenshtein::BV distance == 4
+              Rate     T::WF      T::L   T::Fuzz L::Simple  T::L::BV
+T::WF       4920/s        --      -22%      -57%      -83%      -96%
+T::L        6339/s       29%        --      -44%      -78%      -95%
+T::Fuzz    11377/s      131%       79%        --      -60%      -90%
+L::Simple  28444/s      478%      349%      150%        --      -76%
+T::L::BV  118154/s     2301%     1764%      939%      315%        --
+ok 21 - UTF-8 len~10: ſhoereſhoſ, Choerephon Text::Fuzzy::PP distance == 3
+ok 22 - UTF-8 len~10: ſhoereſhoſ, Choerephon Text::Levenshtein::BV distance == 3
+             Rate     T::WF      T::L   T::Fuzz L::Simple  T::L::BV
+T::WF      5338/s        --      -20%      -56%      -58%      -94%
+T::L       6679/s       25%        --      -44%      -47%      -93%
+T::Fuzz   12000/s      125%       80%        --       -5%      -87%
+L::Simple 12687/s      138%       90%        6%        --      -86%
+T::L::BV  89321/s     1573%     1237%      644%      604%        --
+ok 23 - UTF-8 10/8: "ⓕⓞaⓤⓡ"x2, "aⓕⓞⓡ"x2 Text::Fuzzy::PP distance == 6
+ok 24 - UTF-8 10/8: "ⓕⓞaⓤⓡ"x2, "aⓕⓞⓡ"x2 Text::Levenshtein::BV distance == 6
+              Rate     T::WF      T::L   T::Fuzz L::Simple  T::L::BV
+T::WF       6458/s        --      -19%      -56%      -68%      -94%
+T::L        8000/s       24%        --      -45%      -61%      -93%
+T::Fuzz    14628/s      127%       83%        --      -29%      -86%
+L::Simple  20479/s      217%      156%       40%        --      -81%
+T::L::BV  108195/s     1575%     1252%      640%      428%        --
+ok 25 - ASCII len=51: a..zA..Y, b..zA..Z Text::Fuzzy::PP distance == 2
+ok 26 - ASCII len=51: a..zA..Y, b..zA..Z Text::Levenshtein::BV distance == 2
+             Rate     T::WF      T::L   T::Fuzz L::Simple  T::L::BV
+T::WF       221/s        --      -20%      -59%      -60%      -99%
+T::L        277/s       25%        --      -49%      -50%      -99%
+T::Fuzz     543/s      145%       96%        --       -1%      -97%
+L::Simple   550/s      148%       98%        1%        --      -97%
+T::L::BV  20096/s     8981%     7148%     3603%     3557%        --
+ok 27 - ASCII prefix/suffix: a..z0A..Z, a..z1A..Z Text::Fuzzy::PP distance == 1
+ok 28 - ASCII prefix/suffix: a..z0A..Z, a..z1A..Z Text::Levenshtein::BV distance == 1
+              Rate     T::WF      T::L   T::Fuzz L::Simple  T::L::BV
+T::WF        201/s        --      -21%      -59%     -100%     -100%
+T::L         254/s       26%        --      -48%     -100%     -100%
+T::Fuzz      491/s      145%       94%        --     -100%     -100%
+L::Simple 110702/s    55003%    43546%    22427%        --       -1%
+T::L::BV  111708/s    55504%    43943%    22631%        1%        --
+ok 29 - UTF-8 50/48: "ⓕⓞaⓤⓡ"x10, "aⓕⓞⓡ"x12 Text::Fuzzy::PP distance == 32
+ok 30 - UTF-8 50/48: "ⓕⓞaⓤⓡ"x10, "aⓕⓞⓡ"x12 Text::Levenshtein::BV distance == 32
+             Rate     T::WF      T::L   T::Fuzz L::Simple  T::L::BV
+T::WF       241/s        --      -16%      -59%      -63%      -99%
+T::L        288/s       19%        --      -51%      -56%      -99%
+T::Fuzz     589/s      144%      105%        --      -11%      -98%
+L::Simple   660/s      174%      129%       12%        --      -97%
+T::L::BV  24216/s     9943%     8316%     4008%     3568%        --
+1..30
+
+real	1m24.871s
+user	1m22.024s
+sys	0m2.765s
+
+############
+
+Levenshtein PP modules
+ok 19 - ASCII len~10: Chrerrplzon, Choerephon Text::Fuzzy::PP distance == 4
+ok 20 - ASCII len~10: Chrerrplzon, Choerephon Text::Levenshtein::BV distance == 4
+              Rate     T::WF      T::L   T::Fuzz L::Simple  T::L::BV
+T::WF       4977/s        --      -22%      -57%      -83%      -96%
+T::L        6390/s       28%        --      -45%      -78%      -94%
+T::Fuzz    11605/s      133%       82%        --      -60%      -90%
+L::Simple  29256/s      488%      358%      152%        --      -75%
+T::L::BV  116081/s     2232%     1717%      900%      297%        --
+ok 21 - UTF-8 len~10: ſhoereſhoſ, Choerephon Text::Fuzzy::PP distance == 3
+ok 22 - UTF-8 len~10: ſhoereſhoſ, Choerephon Text::Levenshtein::BV distance == 3
+             Rate     T::WF      T::L   T::Fuzz L::Simple  T::L::BV
+T::WF      5168/s        --      -22%      -58%      -60%      -94%
+T::L       6637/s       28%        --      -46%      -49%      -93%
+T::Fuzz   12330/s      139%       86%        --       -5%      -86%
+L::Simple 13032/s      152%       96%        6%        --      -85%
+T::L::BV  89321/s     1628%     1246%      624%      585%        --
+ok 23 - UTF-8 10/8: "ⓕⓞaⓤⓡ"x2, "aⓕⓞⓡ"x2 Text::Fuzzy::PP distance == 6
+ok 24 - UTF-8 10/8: "ⓕⓞaⓤⓡ"x2, "aⓕⓞⓡ"x2 Text::Levenshtein::BV distance == 6
+              Rate     T::WF      T::L   T::Fuzz L::Simple  T::L::BV
+T::WF       6576/s        --      -17%      -55%      -68%      -94%
+T::L        7929/s       21%        --      -45%      -61%      -93%
+T::Fuzz    14490/s      120%       83%        --      -29%      -87%
+L::Simple  20286/s      208%      156%       40%        --      -82%
+T::L::BV  110276/s     1577%     1291%      661%      444%        --
+ok 25 - ASCII len=51: a..zA..Y, b..zA..Z Text::Fuzzy::PP distance == 2
+ok 26 - ASCII len=51: a..zA..Y, b..zA..Z Text::Levenshtein::BV distance == 2
+             Rate     T::WF      T::L   T::Fuzz L::Simple  T::L::BV
+T::WF       217/s        --      -22%      -59%      -60%      -99%
+T::L        277/s       28%        --      -48%      -50%      -99%
+T::Fuzz     528/s      143%       91%        --       -4%      -97%
+L::Simple   550/s      153%       98%        4%        --      -97%
+T::L::BV  20286/s     9237%     7216%     3740%     3591%        --
+ok 27 - ASCII prefix/suffix: a..z0A..Z, a..z1A..Z Text::Fuzzy::PP distance == 1
+ok 28 - ASCII prefix/suffix: a..z0A..Z, a..z1A..Z Text::Levenshtein::BV distance == 1
+              Rate     T::WF      T::L   T::Fuzz L::Simple  T::L::BV
+T::WF        203/s        --      -21%      -60%     -100%     -100%
+T::L         256/s       26%        --      -49%     -100%     -100%
+T::Fuzz      501/s      147%       95%        --     -100%     -100%
+L::Simple 111708/s    55003%    43485%    22198%        --        0%
+T::L::BV  111708/s    55003%    43485%    22198%        0%        --
+ok 29 - UTF-8 50/48: "ⓕⓞaⓤⓡ"x10, "aⓕⓞⓡ"x12 Text::Fuzzy::PP distance == 32
+ok 30 - UTF-8 50/48: "ⓕⓞaⓤⓡ"x10, "aⓕⓞⓡ"x12 Text::Levenshtein::BV distance == 32
+             Rate     T::WF      T::L   T::Fuzz L::Simple  T::L::BV
+T::WF       235/s        --      -18%      -61%      -66%      -99%
+T::L        288/s       23%        --      -52%      -58%      -99%
+T::Fuzz     604/s      158%      110%        --      -13%      -98%
+L::Simple   691/s      195%      140%       14%        --      -97%
+T::L::BV  24888/s    10511%     8550%     4021%     3503%        --
+1..30
+
+real	1m24.818s
+user	1m22.059s
+sys	0m2.735s
+##############
+
+helmut@mbp:~/github/perl/Levenshtein-Simple/xt$ time perl 50_distance_bench.t
+
+Levenshtein XS modules
+ok 1 - ASCII len~10: Chrerrplzon, Choerephon Text::Fuzzy distance == 4
+ok 2 - ASCII len~10: Chrerrplzon, Choerephon Text::Levenshtein::Flexible distance == 4
+ok 3 - ASCII len~10: Chrerrplzon, Choerephon Text::Levenshtein::XS distance == 4
+
+Benchmark XS modules
+              Rate   TL::XS TL::Flex  T::Fuzz
+TL::XS    347539/s       --     -87%     -89%
+TL::Flex 2725258/s     684%       --     -10%
+T::Fuzz  3026401/s     771%      11%       --
+ok 4 - UTF-8 len 10: Chſeſplzon, Choeſephon Text::Fuzzy distance == 4
+ok 5 - UTF-8 len 10: Chſeſplzon, Choeſephon Text::Levenshtein::Flexible distance == 4
+ok 6 - UTF-8 len 10: Chſeſplzon, Choeſephon Text::Levenshtein::XS distance == 4
+
+Benchmark XS modules
+              Rate   TL::XS TL::Flex  T::Fuzz
+TL::XS    378300/s       --     -82%     -86%
+TL::Flex 2066450/s     446%       --     -23%
+T::Fuzz  2672341/s     606%      29%       --
+ok 7 - ASCII len=50: a..zA..X, b..zA..Y Text::Fuzzy distance == 2
+ok 8 - ASCII len=50: a..zA..X, b..zA..Y Text::Levenshtein::Flexible distance == 2
+ok 9 - ASCII len=50: a..zA..X, b..zA..Y Text::Levenshtein::XS distance == 2
+
+Benchmark XS modules
+             Rate   TL::XS TL::Flex  T::Fuzz
+TL::XS    79644/s       --     -61%     -74%
+TL::Flex 204799/s     157%       --     -34%
+T::Fuzz  309688/s     289%      51%       --
+ok 10 - ASCII len=50 prefix/suffix: a..z0A..W, a..z1A..W Text::Fuzzy distance == 1
+ok 11 - ASCII len=50 prefix/suffix: a..z0A..W, a..z1A..W Text::Levenshtein::Flexible distance == 1
+ok 12 - ASCII len=50 prefix/suffix: a..z0A..W, a..z1A..W Text::Levenshtein::XS distance == 1
+
+Benchmark XS modules
+             Rate   TL::XS TL::Flex  T::Fuzz
+TL::XS    78913/s       --     -62%     -75%
+TL::Flex 208523/s     164%       --     -34%
+T::Fuzz  315654/s     300%      51%       --
+ok 13 - UTF-8 50/50: "Chſeſplzon"x5, "Choeſephon"x5 Text::Fuzzy distance == 20
+ok 14 - UTF-8 50/50: "Chſeſplzon"x5, "Choeſephon"x5 Text::Levenshtein::Flexible distance == 20
+ok 15 - UTF-8 50/50: "Chſeſplzon"x5, "Choeſephon"x5 Text::Levenshtein::XS distance == 20
+
+Benchmark XS modules
+             Rate   TL::XS TL::Flex  T::Fuzz
+TL::XS    79644/s       --     -59%     -66%
+TL::Flex 195490/s     145%       --     -16%
+T::Fuzz  231848/s     191%      19%       --
+
+Levenshtein PP modules
+ok 16 - ASCII len~10: Chrerrplzon, Choerephon Text::Fuzzy::PP distance == 4
+ok 17 - ASCII len~10: Chrerrplzon, Choerephon Text::Levenshtein::BV distance == 4
+
+Benchmark PP modules
+              Rate     T::WF      T::L   T::Fuzz L::Simple  T::L::BV
+T::WF       4931/s        --      -22%      -56%      -82%      -96%
+T::L        6339/s       29%        --      -43%      -77%      -95%
+T::Fuzz    11164/s      126%       76%        --      -60%      -91%
+L::Simple  27926/s      466%      341%      150%        --      -76%
+T::L::BV  118153/s     2296%     1764%      958%      323%        --
+ok 18 - UTF-8 len 10: Chſeſplzon, Choeſephon Text::Fuzzy::PP distance == 4
+ok 19 - UTF-8 len 10: Chſeſplzon, Choeſephon Text::Levenshtein::BV distance == 4
+
+Benchmark PP modules
+              Rate     T::WF      T::L   T::Fuzz L::Simple  T::L::BV
+T::WF       5097/s        --      -19%      -56%      -84%      -95%
+T::L        6288/s       23%        --      -45%      -81%      -94%
+T::Fuzz    11487/s      125%       83%        --      -65%      -90%
+L::Simple  32881/s      545%      423%      186%        --      -71%
+T::L::BV  112439/s     2106%     1688%      879%      242%        --
+ok 20 - ASCII len=50: a..zA..X, b..zA..Y Text::Fuzzy::PP distance == 2
+ok 21 - ASCII len=50: a..zA..X, b..zA..Y Text::Levenshtein::BV distance == 2
+
+Benchmark PP modules
+             Rate     T::WF      T::L   T::Fuzz L::Simple  T::L::BV
+T::WF       224/s        --      -24%      -59%      -61%      -99%
+T::L        294/s       31%        --      -47%      -49%      -99%
+T::Fuzz     550/s      145%       87%        --       -5%      -97%
+L::Simple   575/s      157%       96%        5%        --      -97%
+T::L::BV  20096/s     8860%     6739%     3557%     3392%        --
+ok 22 - ASCII len=50 prefix/suffix: a..z0A..W, a..z1A..W Text::Fuzzy::PP distance == 1
+ok 23 - ASCII len=50 prefix/suffix: a..z0A..W, a..z1A..W Text::Levenshtein::BV distance == 1
+
+Benchmark PP modules
+              Rate     T::WF      T::L   T::Fuzz L::Simple  T::L::BV
+T::WF        225/s        --      -23%      -58%     -100%     -100%
+T::L         293/s       30%        --      -45%     -100%     -100%
+T::Fuzz      535/s      137%       82%        --     -100%     -100%
+L::Simple 112733/s    49899%    38340%    20968%        --       -0%
+T::L::BV  112733/s    49899%    38340%    20968%        0%        --
+ok 24 - UTF-8 50/50: "Chſeſplzon"x5, "Choeſephon"x5 Text::Fuzzy::PP distance == 20
+ok 25 - UTF-8 50/50: "Chſeſplzon"x5, "Choeſephon"x5 Text::Levenshtein::BV distance == 20
+
+Benchmark PP modules
+             Rate     T::WF      T::L   T::Fuzz L::Simple  T::L::BV
+T::WF       226/s        --      -17%      -58%      -68%      -99%
+T::L        272/s       21%        --      -50%      -61%      -99%
+T::Fuzz     544/s      141%      100%        --      -23%      -98%
+L::Simple   704/s      212%      158%       29%        --      -97%
+T::L::BV  22123/s     9704%     8024%     3969%     3044%        --
+1..25
+
+real	1m9.233s
+user	1m6.902s
+sys	0m2.260s

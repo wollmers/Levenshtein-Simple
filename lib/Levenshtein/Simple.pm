@@ -13,12 +13,15 @@ sub new {
     my $class = shift;
     my $self = bless @_ ? @_ > 1 ? {@_} : {%{$_[0]}} : {}, ref $class || $class;
 
-    unless ( $self->{'gapchar'} ) { $self->{'gapchar'} = '_'; }
+    unless ( defined $self->{'editchars'} && length($self->{'gapchar'}) == 1) {
+        $self->{'gapchar'} = '_';
+    }
 
     unless ( defined $self->{'editchars'} && ( length($self->{'editchars'}) == 4) ) {
         $self->{'editchars'} = '=~-+';
     }
     my @editchars  = split( //, $self->{'editchars'} );
+
     $self->{'eq'}  = $editchars[0];
     $self->{'sub'} = $editchars[1];
     $self->{'del'} = $editchars[2];
@@ -285,14 +288,14 @@ sub _format_matrix {
 sub format_alignment_path {
     my ($self, $X, $Y ) = @_;
 
-    return $self->_format_alignment_path( $X, $Y, $self->ses( $X, $Y ) );
+    return $self->_format_alignment_path( $self->ses( $X, $Y ) );
 }
 
 sub _format_alignment_path {
-    my ($self, $X, $Y, $hunks) = @_;
+    my ($self, $ses) = @_;
 
     my $line = '[ ';
-    for my $hunk (@$hunks) {
+    for my $hunk (@$ses) {
         $line .= '[' . join(',', @$hunk) . '],';
     }
     $line .=  ' ]';
@@ -306,7 +309,7 @@ sub format_alignment {
 }
 
 sub _format_alignment {
-    my ($self, $X, $Y, $hunks, $gap) = @_;
+    my ($self, $X, $Y, $ses, $gap) = @_;
 
     $gap = (defined $gap) ? $gap : $self->{'gapchar'};
 
@@ -314,7 +317,7 @@ sub _format_alignment {
     my $line2 = '';
     my $line3 = '';
 
-    for my $hunk (@$hunks) {
+    for my $hunk (@$ses) {
         $line2 .= $hunk->[2];
         if ($hunk->[2] eq $self->{'del'}) {
             $line1 .= $X->[$hunk->[0]];
@@ -334,27 +337,11 @@ sub _format_alignment {
         }
     }
 
-    my $metrics = $self->_metrics( $X, $Y, $hunks );
+    my $metrics = $self->_metrics( $X, $Y, $ses );
 
     $line2 .= $self->format_metrics($metrics);
 
     return join("\n", ($line1, $line2, $line3)) . "\n";
-}
-
-sub format_metrics {
-    my ($self, $metrics ) = @_;
-
-    my $string =
-    	' distance: ' . $metrics->{'distance'} .
-    	' M: ' . $metrics->{'matches'} .
-    	' S: ' . $metrics->{'substitutions'} .
-    	' D: '. $metrics->{'deletes'} .
-    	' I: ' . $metrics->{'inserts'} .
-    	' Err: '  . sprintf('%.2f', $metrics->{'error-rate'}) .
-    	' Acc: '  . sprintf('%.2f', $metrics->{'accuracy'}) .
-    	' nErr: ' . sprintf('%.2f', $metrics->{'normalised error-rate'}) .
-    	' Sim: ' . sprintf('%.2f', $metrics->{'similarity'})
-    	;
 }
 
 sub metrics {
@@ -364,7 +351,7 @@ sub metrics {
 }
 
 sub _metrics {
-    my ($self, $X, $Y, $hunks) = @_;
+    my ($self, $X, $Y, $ses) = @_;
 
     my $match      = 0;
     my $substitute = 0;
@@ -387,7 +374,7 @@ sub _metrics {
         'similarity'    => 1, # default for both empty
     };
 
-    for my $hunk (@$hunks) {
+    for my $hunk (@$ses) {
         if ($hunk->[2] eq $self->{'del'}) {
         	$metrics->{'deletes'}++;
         }
@@ -431,15 +418,32 @@ sub _metrics {
     return $metrics;
 }
 
+sub format_metrics {
+    my ($self, $metrics ) = @_;
+
+    my $string =
+    	' distance: ' . $metrics->{'distance'} .
+    	' M: '        . $metrics->{'matches'} .
+    	' S: '        . $metrics->{'substitutions'} .
+    	' D: '        . $metrics->{'deletes'} .
+    	' I: '        . $metrics->{'inserts'} .
+    	' Err: '      . sprintf('%.2f', $metrics->{'error-rate'}) .
+    	' Acc: '      . sprintf('%.2f', $metrics->{'accuracy'}) .
+    	' nErr: '     . sprintf('%.2f', $metrics->{'normalised error-rate'}) .
+    	' Sim: '      . sprintf('%.2f', $metrics->{'similarity'})
+    	;
+    return $string;
+}
+
 sub align2strings {
-  	my ($self, $hunks, $gap) = @_;
+  	my ($self, $ses, $gap) = @_;
 
   	$gap = (defined $gap) ? $gap : $self->{'gapchar'};
 
   	my $a = '';
   	my $b = '';
 
-    for my $hunk (@$hunks) {
+    for my $hunk (@$ses) {
         if ($hunk->[0] eq $hunk->[1]) {
     	    $a .=  $hunk->[0];
     	    $b .=  $hunk->[1];
@@ -462,11 +466,11 @@ sub align2strings {
 }
 
 sub ses2align {
-    my ($self, $X, $Y, $hunks) = @_;
+    my ($self, $X, $Y, $ses) = @_;
 
     my $align = [];
 
-    for my $hunk (@$hunks) {
+    for my $hunk (@$ses) {
         if ($hunk->[2] eq $self->{'del'}) {
             push @$align,[ $X->[$hunk->[0]], '' ];
         }
@@ -481,12 +485,12 @@ sub ses2align {
 }
 
 sub ses2none {
-    my ($self, $hunks) = @_;
+    my ($self, $ses) = @_;
 
     my $none  = -1;
     my $align = [];
 
-    for my $hunk (@$hunks) {
+    for my $hunk (@$ses) {
         if ($hunk->[2] eq $self->{'del'}) {
             push @$align,[ $hunk->[0], $none, $hunk->[2] ];
         }
@@ -558,10 +562,10 @@ Levenshtein::Simple - Levenshtein algorithm in the simple variant
 
   # same as
   $ses = [
-    [0,0,+],
-    [0,1,=],
-    [1,1,-],
-    [2,2,=],
+    [-1, 0, '+'],
+    [ 0, 1, '='],
+    [ 1,-1, '-'],
+    [ 2, 2, '='],
   ];
 
   # generate all shortest edit scripts
@@ -569,9 +573,9 @@ Levenshtein::Simple - Levenshtein algorithm in the simple variant
 
   # same as (reformatted)
   $all_ses = [
-    [ [0,0,~],          [1,1,~], [2,2,=] ],
-    [ [0,0,+], [0,1,=], [1,1,-], [2,2,=] ],
-    [ [0,0,-], [1,0,=], [1,1,+], [2,2,=] ],
+    [ [ 0, 0,'~'],              [ 1, 1,'~'], [ 2, 2,'='], ],
+    [ [-1, 0,'+'], [ 0, 1,'='], [ 1,-1,'-'], [ 2, 2,'='], ],
+    [ [ 0,-1,'-'], [ 1, 0,'='], [-1, 1,'+'], [ 2, 2,'='], ],
   ];
 
   # print the match matrix
@@ -589,7 +593,7 @@ Levenshtein::Simple - Levenshtein algorithm in the simple variant
   print $lev->format_alignment( [ @seq1 ], [ @seq2 ] );
 
   _sue
-  +=-=  distance:2 M:2 S:0 D:1 I:1 ERR:0.67 Acc:0.50 nCER:0.50
+  +=-= distance: 2 M: 2 S: 0 D: 1 I: 1 Err: 0.67 Acc: 0.50 nErr: 0.50 Sim: 0.67
   us_e
 
   # print all alignments
@@ -599,17 +603,16 @@ Levenshtein::Simple - Levenshtein algorithm in the simple variant
   }
 
   sue
-  ~~=  distance:2 M:1 S:2 D:0 I:0 ERR:0.67 Acc:0.33 nCER:0.67
+  ~~= distance: 2 M: 1 S: 2 D: 0 I: 0 Err: 0.67 Acc: 0.33 nErr: 0.67 Sim: 0.33
   use
 
   _sue
-  +=-=  distance:2 M:2 S:0 D:1 I:1 ERR:0.67 Acc:0.50 nCER:0.50
+  +=-= distance: 2 M: 2 S: 0 D: 1 I: 1 Err: 0.67 Acc: 0.50 nErr: 0.50 Sim: 0.67
   us_e
 
   su_e
-  -=+=  distance:2 M:2 S:0 D:1 I:1 ERR:0.67 Acc:0.50 nCER:0.50
+  -=+= distance: 2 M: 2 S: 0 D: 1 I: 1 Err: 0.67 Acc: 0.50 nErr: 0.50 Sim: 0.67
   _use
-
 
 =head1 DESCRIPTION
 
@@ -662,6 +665,15 @@ Parameters are optional.
 
 =over 4
 
+=item distance(\@a, \@b)
+
+Calculates the length of the edit distance.
+
+  my $distance = $lev->distance( [ qw(g o l d) ], [ qw(g l o w) ] );
+  print $distance,"\n";   # prints 3
+
+Distance = substitutions + insertions + deletions.
+
 =item ses(\@a, \@b)
 
 Finds a Shortest Edit Script (SES), taking two arrayrefs as method
@@ -676,23 +688,14 @@ indices, which are represented by 3-element array refs.
 
   # same as
   $ses = [
-    [ 0, 0, '=' ], # match equal
-    [ 0, 1, '+' ], # insertion
-    [ 1, 2, '=' ], # match equal
-    [ 2, 3, '~' ], # substitution
-    [ 3, 3, '-' ]  # deletion
+    [  0,  0, '=' ], # match equal
+    [ -1,  1, '+' ], # insertion
+    [  1,  2, '=' ], # match equal
+    [  2,  3, '~' ], # substitution
+    [  3, -1, '-' ]  # deletion
   ];
 
-NOTE: In case of deletion or insertion one of the indices is not undef or -1.
-
-=item distance(\@a, \@b)
-
-Calculates the length of the edit distance.
-
-  my $distance = $lev->distance( [ qw(g o l d) ], [ qw(g l o w) ] );
-  print $distance,"\n";   # prints 3
-
-Distance = substitutions + insertions + deletions.
+NOTE: In case of deletion or insertion one of the indices is -1.
 
 =item all_ses(\@a, \@b)
 
@@ -767,7 +770,7 @@ Formats an SES human readable in pseudo array notation.
   my $alignment_path = $lev->format_alignment_path( [qw(g o l d)], [qw(g l o w)]);
   print $alignment_path,"\n";
 
-  [ [0,0,=],[0,1,+],[1,2,=],[2,3,~],[3,3,-], ]
+  [ [0,0,=],[0,-1,+],[1,2,=],[2,3,~],[3,-1,-], ]
 
 =item _format_alignment_path(\@a, \@b, $ses)
 
@@ -787,6 +790,42 @@ Returns a string of concatenated lines.
   g_old
   =+=~-  distance: 3 M: 2 S: 1 D: 1 I: 1 Err: 0.75 Acc: 0.40 nErr: 0.60
   glow_
+
+=item _format_alignment(\@a, \@b, $ses, $gap_character)
+
+  my $ses = $lev->ses( [qw(g o l d)], [qw(g l o w)] );
+  my $alignment
+    = $lev->_format_alignment( [qw(g o l d)], [qw(g l o w)], $ses );
+  print $alignment_path,"\n";
+
+=item metrics(\@a, \@b)
+
+Returns a hashref with usual calculations. Which one you use depends on your application.
+
+Error-rate (Err) is known in text applications as CER (Character Error Rate),
+WER (Word Error Rate) or LER (Line Error Rate) with the assumption that sequence1
+is the correct one. It's easy to calculate but can be larger than 1.
+
+  my $metrics = $lev->metrics( [qw(g o l d)], [qw(g l o w)] );
+
+  # same as
+  my $metrics = {
+    'len1'          => 4,
+    'len2'          => 4,
+    'matches'       => 2,            # M
+    'substitutions' => 1,            # S
+    'deletes'       => 1,            # D
+    'inserts'       => 1,            # I
+    'distance'      => 3,            # S + D + I
+    'len-align'     => 5,            # M + distance
+    'error-rate'    => 0.75,         # Err = distance / len1
+    'accuracy'      => 0.4,          # Acc = M / len-align
+    'normalised error-rate' => 0.6,  # nErr = 1 - Acc
+    'normalised similarity' => 0.25, # 1 - ( distance / max( len1, len2 ) )
+    'similarity'    => 0.5,          # M * 2 / ( len1 + len2 )
+  };
+
+=item _metrics(\@a, \@b, $ses)
 
 =back
 
