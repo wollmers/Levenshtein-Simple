@@ -104,6 +104,8 @@ print "\n", 'Levenshtein XS modules', "\n";
 for my $test (@$tests) {
     next unless $test->{test_on};
 
+    print "\n\n", "*** Test $test->{name}", "\n";
+
     my $tf   = Text::Fuzzy->new( $test->{strings}->[0] );
 
     my $distance = Levenshtein::Simple->distance( @{$test->{arrays}} );
@@ -117,9 +119,9 @@ for my $test (@$tests) {
     is( &Text::Levenshtein::XS::distance( @{$test->{strings}} ), $distance,
         "$test->{name} Text::Levenshtein::XS distance == $distance"
     );
-    #is( &Text::Levenshtein::BVXS::distance( @{$test->{strings}} ), $distance,
-    #    "$test->{name} Text::Levenshtein::BVXS distance == $distance"
-    #);
+    is( &Text::Levenshtein::BVXS::distance( @{$test->{strings}} ), $distance,
+        "$test->{name} Text::Levenshtein::BVXS distance == $distance"
+    );
 
     print "\n", 'Benchmark XS modules', "\n";
 
@@ -133,9 +135,9 @@ for my $test (@$tests) {
         'TL::XS' => sub {
             &Text::Levenshtein::XS::distance( @{$test->{strings}} )
         },
-        #'TL::BVXS' => sub {
-        #    &Text::Levenshtein::BVXS::distance( @{$test->{strings}} )
-        #},
+        'TL::BVXS' => sub {
+            &Text::Levenshtein::BVXS::distance( @{$test->{strings}} )
+        },
         #'BVXS::noop' => sub {
         #    &Text::Levenshtein::BVXS::noop( @{$test->{strings}} )
         #},
@@ -151,6 +153,8 @@ print "\n", 'Levenshtein PP modules', "\n";
 
 for my $test (@$tests) {
     next unless $test->{test_on};
+
+    print "\n\n", "*** Test $test->{name}", "\n";
 
     my $tf   = Text::Fuzzy::PP->new( $test->{strings}->[0] );
 
