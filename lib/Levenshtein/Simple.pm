@@ -3,15 +3,23 @@ package Levenshtein::Simple;
 use strict;
 use warnings;
 
+#use utf8;
+
+# NOTE: uncomment for development
+# use standard;
+
 use 5.006;
+
 our $VERSION = '0.01';
 
-binmode(STDOUT,":encoding(UTF-8)");
-binmode(STDERR,":encoding(UTF-8)");
+binmode('STDOUT',":encoding(UTF-8)");
+binmode('STDERR',":encoding(UTF-8)");
 
 sub new {
     my $class = shift;
-    my $self = bless @_ ? @_ > 1 ? {@_} : {%{$_[0]}} : {}, ref $class || $class;
+    my $self = bless(
+        @_ ? (@_ > 1 ? {@_} : {%{$_[0]}} ) : {}, ref( $class ) || $class
+    );
 
     unless ( defined $self->{'editchars'} && length($self->{'gapchar'}) == 1) {
         $self->{'gapchar'} = '_';
@@ -37,7 +45,7 @@ sub distance {
     # catched by prefix/suffix optimisation
 
     # prefix/suffix optimisation
-    my ($amin, $amax, $bmin, $bmax) = (0, $#$X, 0, $#$Y);
+    my ($amin, $amax, $bmin, $bmax) = (0, $#{$X}, 0, $#{$Y});
 
     while ($amin <= $amax and $bmin <= $bmax and $X->[$amin] eq $Y->[$bmin]) {
         $amin++;
@@ -126,8 +134,8 @@ sub matrix {
 sub ses {
     my ( $self, $X, $Y) = @_;
 
-    my $m = scalar @$X;
-    my $n = scalar @$Y;
+    my $m = scalar @{$X};
+    my $n = scalar @{$Y};
 
     if ( !$m && !$n ) { return [] }
 
@@ -146,28 +154,28 @@ sub ses {
         );
 
         if ( $c->[$i-1][$j-1] == $min && (($c->[$i-1][$j-1] + 0 ) == $c->[$i][$j]) ) {
-            unshift @$ses, [$i-1, $j-1, $self->{'eq'}];
+            unshift @{$ses}, [$i-1, $j-1, $self->{'eq'}];
             $i--; $j--;
         }
         elsif ($i > 0 && ($c->[$i-1][$j] + 1 == $c->[$i][$j]) ) {
-            unshift @$ses, [$i-1, -1, $self->{'del'}];
+            unshift @{$ses}, [$i-1, -1, $self->{'del'}];
             $i--;
         }
         elsif ($j > 0 && ($c->[$i][$j-1] + 1 == $c->[$i][$j]) ) {
-            unshift @$ses, [-1, $j-1, $self->{'ins'}];
+            unshift @{$ses}, [-1, $j-1, $self->{'ins'}];
             $j--;
         }
         elsif ($i > 0 && $j > 0 && ($c->[$i-1][$j-1] + 1  == $c->[$i][$j]) ) {
-            unshift @$ses, [$i-1, $j-1, $self->{'sub'}];
+            unshift @{$ses}, [$i-1, $j-1, $self->{'sub'}];
             $i--; $j--;
         }
     }
     while ($i > 0) {
-        unshift @$ses, [$i-1, -1, $self->{'del'}];
+        unshift @{$ses}, [$i-1, -1, $self->{'del'}];
         $i--;
     }
     while ($j > 0) {
-        unshift @$ses, [-1, $j-1, $self->{'ins'}];
+        unshift @{$ses}, [-1, $j-1, $self->{'ins'}];
         $j--;
     }
     return $ses;
@@ -176,8 +184,8 @@ sub ses {
 sub all_ses {
     my ($self, $X, $Y) = @_;
 
-    my $m = scalar @$X;
-    my $n = scalar @$Y;
+    my $m = scalar @{$X};
+    my $n = scalar @{$Y};
 
     if ( !$m && !$n ) { return [[]] }
 
@@ -189,13 +197,13 @@ sub all_ses {
     my $i = $m;
     my $j = $n;
 
-    while ( scalar(@$paths) > 0 ) {
+    while ( scalar(@{$paths}) > 0 ) {
         my @temp;
-        PATH: for my $path (@$paths) {
+        for my $path (@{$paths}) {
             $i = $m;
             $j = $n;
 
-            if (scalar @$path) {
+            if (scalar @{$path}) {
                 $i = $path->[0][0] + 1;
                 $j = $path->[0][1] + 1;
                 if    ($path->[0][2] eq $self->{'del'}) { $i--; }
@@ -206,44 +214,44 @@ sub all_ses {
             # deletion
             if ($i > 0 && $c->[$i-1][$j] + 1 == $c->[$i][$j]) {
                 if ($i == 1 && $j <= 1) {
-                    push @$result, [ [0, 0, $self->{'del'}], @$path ];
+                    push @{$result}, [ [0, 0, $self->{'del'}], @{$path} ];
                 }
                 else {
-                    push @temp, [ [$i-1, $j-1, $self->{'del'}], @$path ];
+                    push @temp, [ [$i-1, $j-1, $self->{'del'}], @{$path} ];
                 }
             }
             # insertion
             if ($j > 0 && $c->[$i][$j-1] + 1 == $c->[$i][$j]) {
                 if ($i <= 1 && $j == 1) {
-                    push @$result, [ [0, 0, $self->{'ins'}], @$path ];
+                    push @{$result}, [ [0, 0, $self->{'ins'}], @{$path} ];
                 }
                 else {
-                    push @temp, [[$i-1, $j-1, $self->{'ins'}], @$path];
+                    push @temp, [[$i-1, $j-1, $self->{'ins'}], @{$path}];
                 }
             }
             # equal = match
             if ($i > 0 && $j > 0 && $c->[$i-1][$j-1] == $c->[$i][$j]) {
                 if ($i == 1 && $j == 1) {
-                    push @$result, [ [0, 0, $self->{'eq'}], @$path ];
+                    push @{$result}, [ [0, 0, $self->{'eq'}], @{$path} ];
                 }
                 else {
-                    push @temp, [ [$i-1, $j-1, $self->{'eq'}], @$path ];
+                    push @temp, [ [$i-1, $j-1, $self->{'eq'}], @{$path} ];
                 }
             }
             # substitution
             if ($i > 0 && $j > 0 && $c->[$i-1][$j-1] + 1  == $c->[$i][$j]) {
                 if ($i == 1 && $j == 1) {
-                    push @$result, [ [0, 0, $self->{'sub'}], @$path ];
+                    push @{$result}, [ [0, 0, $self->{'sub'}], @{$path} ];
                 }
                 else {
-                    push @temp, [[$i-1, $j-1, $self->{'sub'}], @$path];
+                    push @temp, [[$i-1, $j-1, $self->{'sub'}], @{$path}];
                 }
             }
         }
-        @$paths = @temp;
+        @{$paths} = @temp;
     }
 
-    return [ map { $self->ses2none($_) } @$result ];
+    return [ map { $self->ses2none($_) } @{$result} ];
 }
 
 sub format_matrix {
@@ -255,8 +263,8 @@ sub format_matrix {
 sub _format_matrix {
     my ($self, $X, $Y, $c) = @_;
 
-    my $m = scalar @$X;
-    my $n = scalar @$Y;
+    my $m = scalar @{$X};
+    my $n = scalar @{$Y};
 
     my $max_length = ($m >= $n) ? $m : $n;
     my $l = length($max_length) + 1; # length in chars plus space
@@ -264,7 +272,7 @@ sub _format_matrix {
     my $out = '';
 
     $out .= "\n". 'Levenshtein matrix of "'
-        . join('',@$X).'" versus "' . join('',@$Y) . '"' . "\n";
+        . join('',@{$X}).'" versus "' . join('',@{$Y}) . '"' . "\n";
     $out .=  "\n";
     $out .=  sprintf("%${l}s",' ') . sprintf("%${l}s",' ');
     for my $j (0..$n-1) {
@@ -295,8 +303,8 @@ sub _format_alignment_path {
     my ($self, $ses) = @_;
 
     my $line = '[ ';
-    for my $hunk (@$ses) {
-        $line .= '[' . join(',', @$hunk) . '],';
+    for my $hunk (@{$ses}) {
+        $line .= '[' . join(',', @{$hunk}) . '],';
     }
     $line .=  ' ]';
     return $line;
@@ -317,7 +325,7 @@ sub _format_alignment {
     my $line2 = '';
     my $line3 = '';
 
-    for my $hunk (@$ses) {
+    for my $hunk (@{$ses}) {
         $line2 .= $hunk->[2];
         if ($hunk->[2] eq $self->{'del'}) {
             $line1 .= $X->[$hunk->[0]];
@@ -359,8 +367,8 @@ sub _metrics {
     my $insert     = 0;
 
     my $metrics = {
-        'len1'          => scalar(@$X),
-        'len2'          => scalar(@$Y),
+        'len1'          => scalar(@{$X}),
+        'len2'          => scalar(@{$Y}),
         'matches'       => 0,
         'substitutions' => 0,
         'deletes'       => 0,
@@ -374,7 +382,7 @@ sub _metrics {
         'similarity'    => 1, # default for both empty
     };
 
-    for my $hunk (@$ses) {
+    for my $hunk (@{$ses}) {
         if ($hunk->[2] eq $self->{'del'}) {
         	$metrics->{'deletes'}++;
         }
@@ -443,7 +451,7 @@ sub align2strings {
   	my $a = '';
   	my $b = '';
 
-    for my $hunk (@$ses) {
+    for my $hunk (@{$ses}) {
         if ($hunk->[0] eq $hunk->[1]) {
     	    $a .=  $hunk->[0];
     	    $b .=  $hunk->[1];
@@ -470,15 +478,15 @@ sub ses2align {
 
     my $align = [];
 
-    for my $hunk (@$ses) {
+    for my $hunk (@{$ses}) {
         if ($hunk->[2] eq $self->{'del'}) {
-            push @$align,[ $X->[$hunk->[0]], '' ];
+            push @{$align},[ $X->[$hunk->[0]], '' ];
         }
         elsif ($hunk->[2] eq $self->{'ins'}) {
-            push @$align,[ '', $Y->[$hunk->[1]] ];
+            push @{$align},[ '', $Y->[$hunk->[1]] ];
         }
         else {
-            push @$align,[ $X->[$hunk->[0]], $Y->[$hunk->[1]] ];
+            push @{$align},[ $X->[$hunk->[0]], $Y->[$hunk->[1]] ];
         }
     }
     return $align;
@@ -490,15 +498,15 @@ sub ses2none {
     my $none  = -1;
     my $align = [];
 
-    for my $hunk (@$ses) {
+    for my $hunk (@{$ses}) {
         if ($hunk->[2] eq $self->{'del'}) {
-            push @$align,[ $hunk->[0], $none, $hunk->[2] ];
+            push @{$align},[ $hunk->[0], $none, $hunk->[2] ];
         }
         elsif ($hunk->[2] eq $self->{'ins'}) {
-            push @$align,[ $none, $hunk->[1], $hunk->[2] ];
+            push @{$align},[ $none, $hunk->[1], $hunk->[2] ];
         }
         else {
-            push @$align,[ $hunk->[0], $hunk->[1], $hunk->[2] ];
+            push @{$align},[ $hunk->[0], $hunk->[1], $hunk->[2] ];
         }
     }
     return $align;
@@ -509,7 +517,7 @@ sub ses2compact {
 
     my $compact = '';
 
-    for my $hunk (@$ses) { $compact .= $hunk->[2]; }
+    for my $hunk (@{$ses}) { $compact .= $hunk->[2]; }
 
     return $compact;
 }
@@ -598,7 +606,7 @@ Levenshtein::Simple - Levenshtein algorithm in the simple variant
 
   # print all alignments
   my $solutions  = $lev->all_ses( [ @seq1 ], [ @seq2 ] ) ;
-  for my $solution (@$solutions) {
+  for my $solution ( @{$solutions} ) {
     print $lev->_format_alignment( [ @seq1 ], [ @seq2 ] , $solution ), "\n";
   }
 
@@ -850,8 +858,8 @@ Robert A. Wagner and Michael J. Fischer. The string-to-string correction problem
 Journal of the ACM, 21(1):168-173, 1974.
 
 Vladimir I. Levenshtein. Binary codes capable of correcting deletions, insertions, and reversals.
-Soviet Physics Doklady, 10(8):707–710, 1966.
-Original in Russian in Doklady Akademii Nauk SSSR, 163(4):845–848, 1965.
+Soviet Physics Doklady, 10(8):707-710, 1966.
+Original in Russian in Doklady Akademii Nauk SSSR, 163(4):845-848, 1965.
 
 =head1 SOURCE REPOSITORY
 
